@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Admin Karaoke Remote</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="room-info">
+        <h1 id="roomNameHeader">Ruang Karaoke</h1>
+        <div class="connection-status">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="connectionText">Menghubungkan...</span>
+        </div>
+      </div>
+      <button id="btnLogout" class="btn-icon" title="Keluar">⎋</button>
+    </header>
+
+    <!-- Warnings Container -->
+    <div id="warningsBanner" class="warnings-banner hidden"></div>
+
+    <!-- Login View -->
+    <section id="loginSection" class="card login-card">
+      <h2>Masuk Admin</h2>
+      <p class="subtitle">Masukkan PIN admin ruangan ini</p>
+      
+      <div class="pin-display">
+        <input type="password" id="pinInput" maxlength="6" inputmode="numeric" placeholder="••••" autocomplete="off" />
+      </div>
+
+      <div id="loginError" class="error-msg hidden"></div>
+
+      <div class="keypad">
+        <button class="key-btn" data-val="1">1</button>
+        <button class="key-btn" data-val="2">2</button>
+        <button class="key-btn" data-val="3">3</button>
+        <button class="key-btn" data-val="4">4</button>
+        <button class="key-btn" data-val="5">5</button>
+        <button class="key-btn" data-val="6">6</button>
+        <button class="key-btn" data-val="7">7</button>
+        <button class="key-btn" data-val="8">8</button>
+        <button class="key-btn" data-val="9">9</button>
+        <button class="key-btn text-btn" id="btnKeyClear">C</button>
+        <button class="key-btn" data-val="0">0</button>
+        <button class="key-btn text-btn" id="btnKeyDelete">⌫</button>
+      </div>
+
+      <button id="btnLogin" class="btn btn-primary btn-block">Masuk</button>
+    </section>
+
+    <!-- Dashboard View -->
+    <section id="dashboardSection" class="dashboard hidden">
+      <!-- Big Timer Card -->
+      <div class="card timer-card">
+        <div class="status-badge" id="statusBadge">SIAP</div>
+        <div class="timer-display" id="timerDisplay">00:00</div>
+        
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div id="finishNotice" class="finish-notice hidden">
+          ⚠️ WAKTU HABIS! Perpanjang atau hentikan sewa.
+        </div>
+      </div>
+
+      <!-- Quick Presets -->
+      <div class="section-title">Mulai Baru (Menit)</div>
+      <div class="grid grid-4">
+        <button class="btn btn-preset" data-minutes="30">30m</button>
+        <button class="btn btn-preset" data-minutes="60">60m</button>
+        <button class="btn btn-preset" data-minutes="90">90m</button>
+        <button class="btn btn-preset" data-minutes="120">120m</button>
+      </div>
+
+      <!-- Main Controls -->
+      <div class="section-title">Kontrol Timer</div>
+      <div class="grid grid-2">
+        <button id="btnPauseResume" class="btn btn-warning">Jeda</button>
+        <button id="btnStop" class="btn btn-danger">Hentikan</button>
+      </div>
+
+      <!-- Adjustments -->
+      <div class="section-title">Tambah / Kurang Waktu</div>
+      <div class="grid grid-3">
+        <button class="btn btn-adjust" data-adjust="5">+5 Menit</button>
+        <button class="btn btn-adjust" data-adjust="10">+10 Menit</button>
+        <button class="btn btn-adjust" data-adjust="-5">-5 Menit</button>
+      </div>
+
+      <!-- Quick Extend (visible when finished) -->
+      <div id="extendControls" class="extend-section hidden">
+        <div class="section-title">Perpanjang Waktu</div>
+        <div class="grid grid-2">
+          <button class="btn btn-primary btn-adjust" data-adjust="30">+30 Menit</button>
+          <button class="btn btn-primary btn-adjust" data-adjust="60">+60 Menit</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

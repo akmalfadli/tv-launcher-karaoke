@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Karaoke Launcher</string>
+    <string name="channel_name">Timer Service</string>
+    <string name="channel_desc">Menjaga timer karaoke dan server kontrol tetap aktif</string>
+</resources>
