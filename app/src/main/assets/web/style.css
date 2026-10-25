@@ -1264,6 +1264,12 @@ body {
   color: var(--signal-crimson);
 }
 
+.modal-icon-blue {
+  background: rgba(99, 102, 241, 0.14);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  color: #818CF8;
+}
+
 .modal-title-group {
   display: flex;
   flex-direction: column;

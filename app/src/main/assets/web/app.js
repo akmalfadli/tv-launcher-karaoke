@@ -85,6 +85,10 @@
   const settingYoutubeUrl = document.getElementById("settingYoutubeUrl");
   const settingYoutubeMute = document.getElementById("settingYoutubeMute");
   const settingOperatorPhone = document.getElementById("settingOperatorPhone");
+  const editCustomerModal = document.getElementById("editCustomerModal");
+  const inputEditCustomerName = document.getElementById("inputEditCustomerName");
+  const btnCancelEditCustomer = document.getElementById("btnCancelEditCustomer");
+  const btnSaveEditCustomer = document.getElementById("btnSaveEditCustomer");
 
   function formatWaLink(phone, room) {
     if (!phone) return "#";
@@ -178,28 +182,83 @@
     });
   });
 
-  // Edit active customer name
-  activeCustomerBadge.addEventListener("click", async () => {
+  // Edit active customer name (Proper Modal Dialog)
+  function openEditCustomerModal() {
     if (!currentState || currentState.status === "IDLE") return;
-    const currentName = activeCustomerName.textContent || "";
-    const newName = prompt("Ubah nama pelanggan untuk sesi ini:", currentName);
-    if (newName !== null && newName.trim() !== "") {
-      try {
-        const res = await fetch("/api/rental/customer-name", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          body: JSON.stringify({ customerName: newName.trim() })
-        });
-        if (res.ok) {
-          const updated = await res.json();
-          applyState(updated);
-        }
-      } catch (e) {
+    const currentName = (activeCustomerName?.textContent || "").trim();
+    if (inputEditCustomerName) {
+      inputEditCustomerName.value = currentName === "Pelanggan" ? "" : currentName;
+    }
+    if (editCustomerModal) {
+      editCustomerModal.classList.remove("hidden");
+      setTimeout(() => {
+        inputEditCustomerName?.focus();
+        inputEditCustomerName?.select();
+      }, 50);
+    }
+  }
+
+  function closeEditCustomerModal() {
+    if (editCustomerModal) {
+      editCustomerModal.classList.add("hidden");
+    }
+  }
+
+  async function handleSaveEditCustomer() {
+    if (!inputEditCustomerName) return;
+    const newName = inputEditCustomerName.value.trim();
+    if (!newName) {
+      inputEditCustomerName.focus();
+      return;
+    }
+
+    try {
+      if (btnSaveEditCustomer) {
+        btnSaveEditCustomer.disabled = true;
+        btnSaveEditCustomer.textContent = "Menyimpan...";
+      }
+      const res = await fetch("/api/rental/customer-name", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ customerName: newName })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        applyState(updated);
+        closeEditCustomerModal();
+      } else {
         alert("Gagal mengubah nama pelanggan");
       }
+    } catch (e) {
+      alert("Gagal mengubah nama pelanggan: " + e.message);
+    } finally {
+      if (btnSaveEditCustomer) {
+        btnSaveEditCustomer.disabled = false;
+        btnSaveEditCustomer.textContent = "Simpan";
+      }
+    }
+  }
+
+  activeCustomerBadge.addEventListener("click", openEditCustomerModal);
+  btnCancelEditCustomer?.addEventListener("click", closeEditCustomerModal);
+  btnSaveEditCustomer?.addEventListener("click", handleSaveEditCustomer);
+
+  inputEditCustomerName?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSaveEditCustomer();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      closeEditCustomerModal();
+    }
+  });
+
+  editCustomerModal?.addEventListener("click", (e) => {
+    if (e.target === editCustomerModal) {
+      closeEditCustomerModal();
     }
   });
 
