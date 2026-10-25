@@ -67,6 +67,17 @@ class TimerService : Service() {
             app.timerEngine.state.collectLatest { state ->
                 overlayController.updateState(state)
                 updateNotification(state)
+
+                if (state.isFinished) {
+                    try {
+                        val homeIntent = Intent(this@TimerService, MainActivity::class.java).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                        }
+                        startActivity(homeIntent)
+                    } catch (e: Exception) {
+                        // ignore
+                    }
+                }
             }
         }
 

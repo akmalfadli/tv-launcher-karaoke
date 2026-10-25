@@ -1,5 +1,5 @@
 // PWA Service Worker for Karaoke TV Launcher Remote
-const CACHE_NAME = 'karaoke-remote-v1';
+const CACHE_NAME = 'karaoke-remote-v2';
 const STATIC_ASSETS = [
   '/',
   '/style.css',
