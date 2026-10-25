@@ -386,7 +386,7 @@ class LocalServer(
                     call.respond(HttpStatusCode.BadRequest, ErrorResponse("Payload tidak valid"))
                     return@post
                 }
-                val handled = id.karaoke.timerlauncher.service.TvNavigationController.sendNavKey(req.action)
+                val handled = id.karaoke.timerlauncher.service.TvNavigationController.sendNavKey(req.action, context)
                 call.respond(mapOf("status" to if (handled) "ok" else "failed"))
             }
 
@@ -438,7 +438,7 @@ class LocalServer(
                 }
                 val req = runCatching { call.receive<CustomerKeypadRequest>() }.getOrNull()
                 val key = req?.key?.trim() ?: ""
-                val handled = id.karaoke.timerlauncher.service.TvNavigationController.sendNavKey(key)
+                val handled = id.karaoke.timerlauncher.service.TvNavigationController.sendNavKey(key, context)
                 call.respond(mapOf("status" to if (handled) "ok" else "failed"))
             }
 

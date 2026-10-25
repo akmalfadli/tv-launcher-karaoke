@@ -38,7 +38,15 @@ class TvRemoteAccessibilityService : AccessibilityService() {
 object TvNavigationController {
     var accessibilityService: TvRemoteAccessibilityService? = null
 
-    fun sendNavKey(action: String): Boolean {
+    fun sendNavKey(action: String, context: Context? = null): Boolean {
+        if (action.equals("HOME", ignoreCase = true)) {
+            val ctx = context ?: accessibilityService
+            if (ctx != null) {
+                bringLauncherToFront(ctx)
+                return true
+            }
+        }
+
         val service = accessibilityService
         if (service != null) {
             val globalAction = when (action.uppercase()) {
@@ -48,7 +56,6 @@ object TvNavigationController {
                 "RIGHT" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) 19 else null
                 "CENTER", "OK", "SELECT" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) 20 else null
                 "BACK" -> AccessibilityService.GLOBAL_ACTION_BACK
-                "HOME" -> AccessibilityService.GLOBAL_ACTION_HOME
                 else -> null
             }
             if (globalAction != null) {
@@ -65,7 +72,6 @@ object TvNavigationController {
             "RIGHT" -> "22"
             "CENTER", "OK", "SELECT" -> "23"
             "BACK" -> "4"
-            "HOME" -> "3"
             "ENTER" -> "66"
             "DEL", "BACKSPACE" -> "67"
             "SPACE" -> "62"
@@ -93,8 +99,32 @@ object TvNavigationController {
     }
 
     /**
+     * Brings the Karaoke Launcher (MainActivity) directly to foreground.
+     */
+    fun bringLauncherToFront(context: Context) {
+        try {
+            val homeIntent = Intent(context, MainActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            }
+            val pendingIntent = PendingIntent.getActivity(
+                context,
+                8888,
+                homeIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            try {
+                pendingIntent.send()
+            } catch (_: Exception) {
+                context.startActivity(homeIntent)
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("TvNavController", "Failed to bring MainActivity to front", e)
+        }
+    }
+
+    /**
      * Stops/pauses running media playback (e.g. YouTube), reclaims audio focus,
-     * and forces the TV back to the Karaoke Launcher Home screen.
+     * and brings the TV back to the Karaoke Launcher Home screen.
      */
     fun stopPlaybackAndReturnHome(context: Context) {
         // 1. Send MEDIA PAUSE and MEDIA STOP keycodes to pause any running video/music player
@@ -128,41 +158,10 @@ object TvNavigationController {
             android.util.Log.e("TvNavController", "Error requesting audio focus", e)
         }
 
-        // 3. Perform Accessibility GLOBAL_ACTION_HOME if accessibility service is active
-        try {
-            accessibilityService?.performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME)
-        } catch (e: Exception) {
-            android.util.Log.e("TvNavController", "Error performing global home", e)
-        }
+        // 3. Bring Karaoke Launcher (MainActivity) to foreground directly
+        bringLauncherToFront(context)
 
-        // 4. Fallback: shell input keyevent 3 (HOME)
-        try {
-            Runtime.getRuntime().exec(arrayOf("input", "keyevent", "3"))
-        } catch (_: Exception) {}
-
-        // 5. Explicitly launch MainActivity with clear top flags and PendingIntent
-        try {
-            val homeIntent = Intent(context, MainActivity::class.java).apply {
-                action = Intent.ACTION_MAIN
-                addCategory(Intent.CATEGORY_HOME)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-            }
-            val pendingIntent = PendingIntent.getActivity(
-                context,
-                8888,
-                homeIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            try {
-                pendingIntent.send()
-            } catch (_: Exception) {
-                context.startActivity(homeIntent)
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("TvNavController", "Failed to launch MainActivity", e)
-        }
-
-        // 6. Kill background YouTube processes so it doesn't continue streaming/buffering
+        // 4. Kill background YouTube processes so it doesn't continue streaming/buffering
         try {
             val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
             activityManager?.killBackgroundProcesses("com.google.android.youtube.tv")
