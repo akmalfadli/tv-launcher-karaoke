@@ -561,6 +561,33 @@ body {
   filter: grayscale(0.8);
 }
 
+/* Footer / Admin Link */
+.customer-footer {
+  text-align: center;
+  padding: 12px 0 4px;
+}
+
+.admin-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.15s ease;
+}
+
+.admin-link:hover {
+  color: var(--accent-amber);
+  border-color: rgba(245, 158, 11, 0.3);
+  background: rgba(245, 158, 11, 0.08);
+}
+
 /* Toast */
 .toast {
   position: fixed;

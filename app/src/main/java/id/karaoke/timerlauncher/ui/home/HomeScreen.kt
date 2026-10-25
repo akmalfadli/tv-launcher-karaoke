@@ -663,64 +663,35 @@ fun HomeScreen(onOpenSettings: () -> Unit) {
                     }
                 }
 
-                // Corner QR Code: Operator QR when IDLE, Customer Remote QR when ACTIVE
-                if (timerState.isIdle) {
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Row(
+                // Corner QR Code: Mobile Remote for customers with Admin Control link
+                Spacer(modifier = Modifier.width(16.dp))
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(SurfaceDark)
+                        .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(16.dp))
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(SurfaceDark)
-                            .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(16.dp))
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            .size(68.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.White)
+                            .padding(4.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(64.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color.White)
-                                .padding(4.dp)
-                        ) {
-                            Image(
-                                bitmap = qrBitmap,
-                                contentDescription = "Admin QR Code",
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        }
-                        Column {
-                            Text("Remote Operator", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
-                            Text(adminUrl, fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = AccentAmber)
-                        }
+                        Image(
+                            bitmap = customerQrBitmap,
+                            contentDescription = "Mobile Remote QR",
+                            modifier = Modifier.fillMaxSize()
+                        )
                     }
-                } else {
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(SurfaceDark)
-                            .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(16.dp))
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(64.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color.White)
-                                .padding(4.dp)
-                        ) {
-                            Image(
-                                bitmap = customerQrBitmap,
-                                contentDescription = "Customer Remote QR",
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        }
-                        Column {
-                            Text("Remote Tamu", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
-                            Text(customerUrl, fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = SuccessGreen)
-                        }
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text("Mobile Remote", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                        Text(customerUrl, fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = SuccessGreen)
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text("Kontrol Admin: $adminUrl", fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = AccentAmber)
                     }
                 }
             }
