@@ -73,6 +73,16 @@ data class CustomerNavRequest(
 )
 
 @Serializable
+data class CustomerSearchRequest(
+    val query: String = ""
+)
+
+@Serializable
+data class CustomerKeypadRequest(
+    val key: String = ""
+)
+
+@Serializable
 data class RespondCustomerRequest(
     val requestId: String,
     val action: String = "ACCEPT" // "ACCEPT" or "REJECT"

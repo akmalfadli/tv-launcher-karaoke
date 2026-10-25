@@ -30,6 +30,11 @@
   const btnNavOk = document.getElementById("btnNavOk");
   const btnNavBack = document.getElementById("btnNavBack");
   const btnNavHome = document.getElementById("btnNavHome");
+  const headerTimer = document.getElementById("headerTimer");
+  const searchForm = document.getElementById("searchForm");
+  const searchQuery = document.getElementById("searchQuery");
+  const btnClearSearch = document.getElementById("btnClearSearch");
+  const numpadGrid = document.getElementById("numpadGrid");
   const toastEl = document.getElementById("toast");
   const pulseDot = document.getElementById("pulseDot");
   const connLabel = document.getElementById("connLabel");
@@ -152,6 +157,13 @@
         navShortcuts.classList.add("disabled");
       }
     }
+    if (numpadGrid) {
+      if (isRunning) {
+        numpadGrid.classList.remove("disabled");
+      } else {
+        numpadGrid.classList.add("disabled");
+      }
+    }
 
     renderTimer();
 
@@ -185,6 +197,9 @@
 
     if (timeRemaining) {
       timeRemaining.textContent = displayStr;
+    }
+    if (headerTimer) {
+      headerTimer.textContent = displayStr;
     }
 
     // Update progress bar
@@ -271,6 +286,48 @@
     }
   }
 
+  async function searchYouTube(query) {
+    vibrate();
+    if (!query || !query.trim()) return;
+    if (!currentState || currentState.status !== "RUNNING") {
+      showToast("Waktu belum berjalan. Hubungi kasir untuk memulai sesi!");
+      return;
+    }
+    try {
+      showToast(`Mencari "${query.trim()}" di TV...`);
+      const res = await fetch("/api/customer/search-youtube", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: query.trim() })
+      });
+      if (res.ok) {
+        showToast(`Membuka hasil "${query.trim()}" di TV`);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        showToast(err.message || "Gagal melakukan pencarian di TV");
+      }
+    } catch (e) {
+      showToast("Gagal melakukan pencarian di TV");
+    }
+  }
+
+  async function sendKeypad(key) {
+    vibrate();
+    if (!currentState || currentState.status !== "RUNNING") {
+      showToast("Waktu belum berjalan. Mulai sesi karaoke terlebih dahulu!");
+      return;
+    }
+    try {
+      await fetch("/api/customer/keypad", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: key })
+      });
+    } catch (e) {
+      console.warn("Keypad error:", e);
+    }
+  }
+
   // Setup Event Listeners
   btnExt1H?.addEventListener("click", () => {
     sendCustomerRequest("EXTENSION", 60, "Permintaan tambah waktu 1 jam dari pelanggan");
@@ -293,6 +350,41 @@
   btnNavOk?.addEventListener("click", () => sendNav("OK"));
   btnNavBack?.addEventListener("click", () => sendNav("BACK"));
   btnNavHome?.addEventListener("click", () => sendNav("HOME"));
+
+  // Smart Search Listeners
+  searchForm?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (searchQuery) {
+      searchYouTube(searchQuery.value);
+      searchQuery.blur();
+    }
+  });
+
+  searchQuery?.addEventListener("input", () => {
+    if (btnClearSearch) {
+      if (searchQuery.value.length > 0) {
+        btnClearSearch.classList.remove("hidden");
+      } else {
+        btnClearSearch.classList.add("hidden");
+      }
+    }
+  });
+
+  btnClearSearch?.addEventListener("click", () => {
+    if (searchQuery) {
+      searchQuery.value = "";
+      searchQuery.focus();
+      btnClearSearch.classList.add("hidden");
+    }
+  });
+
+  // Numpad Keypad Listeners
+  document.querySelectorAll(".btn-numpad").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const key = btn.getAttribute("data-key");
+      if (key) sendKeypad(key);
+    });
+  });
 
   // Initial fetch and polling every 2.5 seconds
   fetchStatus();

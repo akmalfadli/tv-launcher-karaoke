@@ -136,6 +136,9 @@ class LocalServer(
             get("/customer") {
                 serveAsset(call, "web/customer.html", ContentType.Text.Html)
             }
+            get("/remote") {
+                serveAsset(call, "web/remote.html", ContentType.Text.Html)
+            }
             get("/customer.css") {
                 serveAsset(call, "web/customer.css", ContentType.Text.CSS)
             }
@@ -382,6 +385,58 @@ class LocalServer(
                     return@post
                 }
                 val handled = id.karaoke.timerlauncher.service.TvNavigationController.sendNavKey(req.action)
+                call.respond(mapOf("status" to if (handled) "ok" else "failed"))
+            }
+
+            post("/api/customer/search-youtube") {
+                val currentStatus = timerEngine.state.value.status
+                if (currentStatus != id.karaoke.timerlauncher.timer.TimerStatus.RUNNING) {
+                    call.respond(
+                        HttpStatusCode.Forbidden,
+                        ErrorResponse("Waktu belum berjalan. Sesi karaoke belum aktif.")
+                    )
+                    return@post
+                }
+                val req = runCatching { call.receive<CustomerSearchRequest>() }.getOrNull()
+                val query = req?.query?.trim()
+                if (query.isNullOrBlank()) {
+                    call.respond(HttpStatusCode.BadRequest, ErrorResponse("Kata kunci pencarian tidak boleh kosong"))
+                    return@post
+                }
+                try {
+                    val encoded = java.net.URLEncoder.encode(query, "UTF-8")
+                    val uri = android.net.Uri.parse("https://www.youtube.com/results?search_query=$encoded")
+                    val intent = Intent(Intent.ACTION_VIEW, uri).apply {
+                        setPackage("com.google.android.youtube.tv")
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    val finalIntent = if (intent.resolveActivity(context.packageManager) != null) {
+                        intent
+                    } else {
+                        Intent(Intent.ACTION_VIEW, uri).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                    }
+                    context.startActivity(finalIntent)
+                    settingsRepository.recordAction("CUSTOMER_SEARCH", "Pencarian YouTube: $query", call.request.origin.remoteHost)
+                    call.respond(mapOf("status" to "ok", "query" to query))
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.InternalServerError, ErrorResponse("Gagal melakukan pencarian di TV: ${e.message}"))
+                }
+            }
+
+            post("/api/customer/keypad") {
+                val currentStatus = timerEngine.state.value.status
+                if (currentStatus != id.karaoke.timerlauncher.timer.TimerStatus.RUNNING) {
+                    call.respond(
+                        HttpStatusCode.Forbidden,
+                        ErrorResponse("Waktu belum berjalan. Sesi karaoke belum aktif.")
+                    )
+                    return@post
+                }
+                val req = runCatching { call.receive<CustomerKeypadRequest>() }.getOrNull()
+                val key = req?.key?.trim() ?: ""
+                val handled = id.karaoke.timerlauncher.service.TvNavigationController.sendNavKey(key)
                 call.respond(mapOf("status" to if (handled) "ok" else "failed"))
             }
 

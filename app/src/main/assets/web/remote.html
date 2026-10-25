@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0E0F12">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="application-name" content="TV Remote">
+  <title>Remote TV • Tamu Ruangan</title>
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <link rel="stylesheet" href="/customer.css">
+</head>
+<body>
+  <div class="customer-app">
+    <!-- Top Bar -->
+    <header class="customer-header">
+      <div class="room-details">
+        <span class="micro-badge">TV & YOUTUBE REMOTE</span>
+        <h1 id="roomTitle" class="room-title">Ruang Karaoke</h1>
+        <div class="customer-info" id="customerInfo">Navigasi TV & Pemilihan Lagu</div>
+      </div>
+      <div class="header-right-tools">
+        <div class="live-pill" id="livePill">
+          <span class="pulse-dot" id="pulseDot"></span>
+          <span id="headerTimer" class="header-timer">00:00</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Switcher Tabs -->
+    <nav class="page-switch-tabs">
+      <a href="/remote" class="switch-tab active">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+          <line x1="12" y1="18" x2="12.01" y2="18"></line>
+        </svg>
+        <span>Remote TV</span>
+      </a>
+      <a href="/customer" class="switch-tab">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span>Sesi & Waktu</span>
+      </a>
+    </nav>
+
+    <!-- 1. Smart Song Search Input (Type with smartphone keyboard) -->
+    <section class="card action-section">
+      <div class="section-title-wrap">
+        <span class="section-title">PENCARIAN CEPAT LAGU KARAOKE</span>
+        <span class="section-subtitle">Ketik judul lagu untuk langsung mencari di YouTube TV</span>
+      </div>
+
+      <form id="searchForm" class="search-form" onsubmit="return false;">
+        <div class="search-input-wrap">
+          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input 
+            type="search" 
+            id="searchQuery" 
+            class="search-input" 
+            placeholder="Contoh: Noah Separuh Aku Karaoke..." 
+            autocomplete="off" 
+            enterkeyhint="search"
+          >
+          <button type="button" id="btnClearSearch" class="btn-clear-search hidden" title="Hapus teks">&times;</button>
+        </div>
+        <button type="submit" id="btnSubmitSearch" class="btn-search-submit">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+          <span>Cari di TV</span>
+        </button>
+      </form>
+    </section>
+
+    <!-- 2. D-Pad Directional Controller Section -->
+    <section class="card action-section">
+      <div class="section-title-wrap">
+        <span class="section-title">NAVIGASI ARAH D-PAD</span>
+        <span class="section-subtitle">Gunakan tombol arah untuk memilih lagu di TV</span>
+      </div>
+
+      <div class="dpad-container" id="dpadContainer">
+        <div class="dpad-cross">
+          <button id="btnNavUp" class="dpad-btn dpad-up" title="Atas" aria-label="Atas">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+          </button>
+          <div class="dpad-middle-row">
+            <button id="btnNavLeft" class="dpad-btn dpad-left" title="Kiri" aria-label="Kiri">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+            <button id="btnNavOk" class="dpad-btn dpad-center" title="Pilih / OK" aria-label="Pilih / OK">
+              <span>OK</span>
+            </button>
+            <button id="btnNavRight" class="dpad-btn dpad-right" title="Kanan" aria-label="Kanan">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
+          <button id="btnNavDown" class="dpad-btn dpad-down" title="Bawah" aria-label="Bawah">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Nav Controls (Back, Home) -->
+      <div class="nav-shortcuts">
+        <button id="btnNavBack" class="btn-shortcut" title="Kembali">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+            <line x1="9" y1="12" x2="20" y2="12"></line>
+          </svg>
+          <span>Kembali</span>
+        </button>
+
+        <button id="btnNavHome" class="btn-shortcut" title="Menu Utama TV">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span>Home TV</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 3. Keypad Numerik (Numpad) Section -->
+    <section class="card action-section">
+      <div class="section-title-wrap between">
+        <div>
+          <span class="section-title">KEYPAD ANGKA</span>
+          <span class="section-subtitle">Input angka untuk kode atau pilihan di layar TV</span>
+        </div>
+      </div>
+
+      <div class="numpad-grid" id="numpadGrid">
+        <button class="btn-numpad" data-key="1">1</button>
+        <button class="btn-numpad" data-key="2">2</button>
+        <button class="btn-numpad" data-key="3">3</button>
+        <button class="btn-numpad" data-key="4">4</button>
+        <button class="btn-numpad" data-key="5">5</button>
+        <button class="btn-numpad" data-key="6">6</button>
+        <button class="btn-numpad" data-key="7">7</button>
+        <button class="btn-numpad" data-key="8">8</button>
+        <button class="btn-numpad" data-key="9">9</button>
+        <button class="btn-numpad btn-numpad-action" data-key="DEL" title="Hapus">&#9003;</button>
+        <button class="btn-numpad" data-key="0">0</button>
+        <button class="btn-numpad btn-numpad-action" data-key="ENTER" title="Kirim / Enter">&#8629;</button>
+      </div>
+    </section>
+
+    <!-- 4. TV Volume Speaker Section -->
+    <section class="card action-section">
+      <div class="section-title-wrap">
+        <span class="section-title">VOLUME TV RUANGAN</span>
+        <span class="section-subtitle">Atur volume speaker TV ruangan</span>
+      </div>
+
+      <div class="tv-control-row">
+        <button id="btnVolDown" class="btn-tv" title="Kecilkan Volume">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="15" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Vol -</span>
+        </button>
+
+        <button id="btnVolMute" class="btn-tv btn-tv-mute" title="Mute Speaker">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+          </svg>
+          <span>Mute</span>
+        </button>
+
+        <button id="btnVolUp" class="btn-tv" title="Besarkan Volume">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+          <span>Vol +</span>
+        </button>
+      </div>
+
+      <button id="btnOpenYouTube" class="btn-youtube">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+        </svg>
+        <span>Buka YouTube Karaoke di TV</span>
+      </button>
+    </section>
+
+    <!-- Footer / Admin Link -->
+    <footer class="customer-footer">
+      <a href="/" class="admin-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        <span>Kontrol Operator Admin</span>
+      </a>
+    </footer>
+
+    <!-- Toast Notification Popup -->
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <script src="/customer.js"></script>
+</body>
+</html>

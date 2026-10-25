@@ -58,6 +58,19 @@ object TvNavigationController {
             "CENTER", "OK", "SELECT" -> "23"
             "BACK" -> "4"
             "HOME" -> "3"
+            "ENTER" -> "66"
+            "DEL", "BACKSPACE" -> "67"
+            "SPACE" -> "62"
+            "0" -> "7"
+            "1" -> "8"
+            "2" -> "9"
+            "3" -> "10"
+            "4" -> "11"
+            "5" -> "12"
+            "6" -> "13"
+            "7" -> "14"
+            "8" -> "15"
+            "9" -> "16"
             else -> return false
         }
         return try {

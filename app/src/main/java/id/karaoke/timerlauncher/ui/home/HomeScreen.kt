@@ -690,8 +690,6 @@ fun HomeScreen(onOpenSettings: () -> Unit) {
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text("Mobile Remote", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                         Text(customerUrl, fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = SuccessGreen)
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text("Kontrol Admin: $adminUrl", fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = AccentAmber)
                     }
                 }
             }
