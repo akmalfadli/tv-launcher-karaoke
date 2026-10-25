@@ -46,9 +46,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.activity.compose.BackHandler
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -220,6 +227,25 @@ fun HomeScreen(onOpenSettings: () -> Unit) {
     var showLockedNotice by remember { mutableStateOf(false) }
     var showWhatsAppDialog by remember { mutableStateOf(false) }
 
+    // User navigation / cursor activity tracker for timer dimming
+    var lastInteractionTime by remember { mutableStateOf(System.currentTimeMillis()) }
+    var isUserActive by remember { mutableStateOf(true) }
+
+    LaunchedEffect(lastInteractionTime) {
+        isUserActive = true
+        delay(5000L) // 5 seconds of inactivity before dimming
+        isUserActive = false
+    }
+
+    val timerAlpha by animateFloatAsState(
+        targetValue = if (isUserActive) 1.0f else 0.2f,
+        animationSpec = tween(
+            durationMillis = if (isUserActive) 250 else 800,
+            easing = FastOutSlowInEasing
+        ),
+        label = "timerAlpha"
+    )
+
     // Recheck ADB & IP every 5s
     LaunchedEffect(Unit) {
         while (true) {
@@ -238,6 +264,18 @@ fun HomeScreen(onOpenSettings: () -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .background(BgDark)
+            .onPreviewKeyEvent {
+                lastInteractionTime = System.currentTimeMillis()
+                false
+            }
+            .pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        awaitPointerEvent(PointerEventPass.Initial)
+                        lastInteractionTime = System.currentTimeMillis()
+                    }
+                }
+            }
     ) {
         // Standby Background: Active strictly when timer is IDLE
         if (timerState.isIdle) {
@@ -475,7 +513,9 @@ fun HomeScreen(onOpenSettings: () -> Unit) {
 
             // 2. Center Hero: Timer Display & Status
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .alpha(timerAlpha),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Status Badge

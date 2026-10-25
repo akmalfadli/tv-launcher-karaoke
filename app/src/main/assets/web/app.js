@@ -85,8 +85,6 @@
   const settingYoutubeUrl = document.getElementById("settingYoutubeUrl");
   const settingYoutubeMute = document.getElementById("settingYoutubeMute");
   const settingOperatorPhone = document.getElementById("settingOperatorPhone");
-  const operatorWaCard = document.getElementById("operatorWaCard");
-  const linkOperatorWa = document.getElementById("linkOperatorWa");
 
   function formatWaLink(phone, room) {
     if (!phone) return "#";
@@ -744,13 +742,6 @@
       if (settingVideoMute) settingVideoMute.checked = (data.standbyVideoMute !== false);
       if (settingOperatorPhone) settingOperatorPhone.value = data.operatorPhone || "";
 
-      if (data.operatorPhone && operatorWaCard && linkOperatorWa) {
-        linkOperatorWa.href = formatWaLink(data.operatorPhone, data.roomName);
-        operatorWaCard.classList.remove("hidden");
-      } else if (operatorWaCard) {
-        operatorWaCard.classList.add("hidden");
-      }
-
       if (data.hasCustomBgImage) {
         if (bgImgElement) {
           bgImgElement.src = "/api/settings/background-image?t=" + Date.now();
@@ -858,12 +849,6 @@
       if (roomNameHeader) roomNameHeader.textContent = data.roomName;
       if (settingNewPin) settingNewPin.value = "";
       if (settingConfirmPin) settingConfirmPin.value = "";
-      if (data.operatorPhone && operatorWaCard && linkOperatorWa) {
-        linkOperatorWa.href = formatWaLink(data.operatorPhone, data.roomName);
-        operatorWaCard.classList.remove("hidden");
-      } else if (operatorWaCard) {
-        operatorWaCard.classList.add("hidden");
-      }
       showSettingsAlert("Pengaturan berhasil disimpan dan disinkronkan ke TV", false);
       if (rateDisplayTag) rateDisplayTag.textContent = `Tarif: ${formatRupiah(currentHourlyRate)} / Jam`;
       if (previewRateFormatted) previewRateFormatted.textContent = `${formatRupiah(currentHourlyRate)} / Jam`;
