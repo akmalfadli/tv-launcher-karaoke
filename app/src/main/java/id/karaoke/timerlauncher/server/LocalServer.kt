@@ -345,6 +345,14 @@ class LocalServer(
             }
 
             post("/api/customer/open-youtube") {
+                val currentStatus = timerEngine.state.value.status
+                if (currentStatus != id.karaoke.timerlauncher.timer.TimerStatus.RUNNING) {
+                    call.respond(
+                        HttpStatusCode.Forbidden,
+                        ErrorResponse("Waktu belum berjalan. Sesi karaoke belum aktif.")
+                    )
+                    return@post
+                }
                 try {
                     val pm = context.packageManager
                     val ytIntent = pm.getLaunchIntentForPackage("com.google.android.youtube.tv")

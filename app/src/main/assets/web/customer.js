@@ -120,6 +120,15 @@
       }
     }
 
+    // YouTube button availability (Only allow when timer is actively RUNNING)
+    if (btnOpenYouTube) {
+      if (data.status === "RUNNING") {
+        btnOpenYouTube.classList.remove("disabled");
+      } else {
+        btnOpenYouTube.classList.add("disabled");
+      }
+    }
+
     renderTimer();
 
     // Start local interpolator
@@ -200,6 +209,10 @@
 
   async function openTvYouTube() {
     vibrate();
+    if (!currentState || currentState.status !== "RUNNING") {
+      showToast("Waktu belum berjalan. Hubungi kasir untuk memulai sesi!");
+      return;
+    }
     try {
       showToast("Membuka YouTube di TV...");
       const res = await fetch("/api/customer/open-youtube", {
@@ -209,7 +222,8 @@
       if (res.ok) {
         showToast("YouTube terbuka di TV");
       } else {
-        throw new Error("Gagal membuka");
+        const err = await res.json().catch(() => ({}));
+        showToast(err.message || "Gagal membuka YouTube di TV");
       }
     } catch (e) {
       showToast("Gagal membuka YouTube di TV");

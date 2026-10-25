@@ -425,6 +425,20 @@ body {
   background: rgba(255, 0, 0, 0.22);
 }
 
+.btn-youtube.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.8);
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+}
+
+.btn-youtube.disabled:active {
+  transform: none;
+  background: rgba(255, 255, 255, 0.03);
+}
+
 /* Toast */
 .toast {
   position: fixed;
