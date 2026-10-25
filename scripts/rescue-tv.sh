@@ -49,10 +49,15 @@ while true; do
   sleep 1
 done
 
-echo ""
-echo "==> [LANGKAH 1] Mengaktifkan kembali launcherx bawaan Sony/Google TV..."
+echo "==> [LANGKAH 1] Mengaktifkan kembali launcher bawaan (AQUA / Haier / Google TV / Android TV)..."
 adb -s "${CONNECTED_TARGET}" shell cmd package enable com.google.android.apps.tv.launcherx || true
 adb -s "${CONNECTED_TARGET}" shell pm enable com.google.android.apps.tv.launcherx || true
+adb -s "${CONNECTED_TARGET}" shell cmd package enable com.google.android.tvlauncher || true
+adb -s "${CONNECTED_TARGET}" shell pm enable com.google.android.tvlauncher || true
+adb -s "${CONNECTED_TARGET}" shell cmd package enable com.haier.launcher.haiermatrix || true
+adb -s "${CONNECTED_TARGET}" shell pm enable com.haier.launcher.haiermatrix || true
+adb -s "${CONNECTED_TARGET}" shell cmd package enable ru.haier.evo || true
+adb -s "${CONNECTED_TARGET}" shell pm enable ru.haier.evo || true
 
 echo "==> [LANGKAH 2] Memperbarui aplikasi dengan patch pencegah crash..."
 if [[ -f "${APK_PATH}" ]]; then
