@@ -298,6 +298,7 @@ class LocalServer(
                 timerEngine.stop()
                 settingsRepository.finishRental("STOPPED")
                 settingsRepository.recordAction("TIMER_STOP", "Hentikan timer", call.request.origin.remoteHost)
+                id.karaoke.timerlauncher.service.TvNavigationController.stopPlaybackAndReturnHome(context)
                 call.respond(createStatusDto())
             }
 
@@ -306,6 +307,7 @@ class LocalServer(
                 timerEngine.reset()
                 settingsRepository.finishRental("RESET")
                 settingsRepository.recordAction("TIMER_RESET", "Reset timer", call.request.origin.remoteHost)
+                id.karaoke.timerlauncher.service.TvNavigationController.stopPlaybackAndReturnHome(context)
                 call.respond(createStatusDto())
             }
 
@@ -799,6 +801,7 @@ class LocalServer(
                     when (event) {
                         is TimerEvent.Finished -> {
                             settingsRepository.finishRental("COMPLETED")
+                            id.karaoke.timerlauncher.service.TvNavigationController.stopPlaybackAndReturnHome(context)
                             wsHub.broadcast(WsMessage("timer_finished", createStatusDto()))
                         }
                     }

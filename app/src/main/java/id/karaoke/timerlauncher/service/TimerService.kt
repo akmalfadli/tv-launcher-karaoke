@@ -64,20 +64,18 @@ class TimerService : Service() {
 
         // Observe timer state
         stateObserverJob = serviceScope.launch {
+            var previousState = app.timerEngine.state.value
             app.timerEngine.state.collectLatest { state ->
                 overlayController.updateState(state)
                 updateNotification(state)
 
                 if (state.isFinished) {
-                    try {
-                        val homeIntent = Intent(this@TimerService, MainActivity::class.java).apply {
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-                        }
-                        startActivity(homeIntent)
-                    } catch (e: Exception) {
-                        // ignore
-                    }
+                    TvNavigationController.stopPlaybackAndReturnHome(this@TimerService)
+                } else if ((previousState.isRunning || previousState.isPaused) && state.isIdle) {
+                    // Session stopped or reset while active
+                    TvNavigationController.stopPlaybackAndReturnHome(this@TimerService)
                 }
+                previousState = state
             }
         }
 

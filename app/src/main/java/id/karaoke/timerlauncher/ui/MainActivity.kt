@@ -17,6 +17,8 @@ import id.karaoke.timerlauncher.ui.theme.KaraokeLauncherTheme
 
 class MainActivity : ComponentActivity() {
 
+    private val currentScreenState = mutableStateOf<Screen>(Screen.Main)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -28,29 +30,35 @@ class MainActivity : ComponentActivity() {
                 val app = App.instance
                 val settings by app.settingsRepository.settingsFlow.collectAsState(initial = app.settingsRepository.getSettingsSync())
 
-                var currentScreen by remember { mutableStateOf<Screen>(Screen.Main) }
+                val currentScreen by currentScreenState
 
                 when {
                     !settings.isSetupDone -> {
                         SetupScreen(
                             onSetupComplete = {
-                                currentScreen = Screen.Main
+                                currentScreenState.value = Screen.Main
                             }
                         )
                     }
                     currentScreen == Screen.Settings -> {
                         SettingsScreen(
-                            onBack = { currentScreen = Screen.Main }
+                            onBack = { currentScreenState.value = Screen.Main }
                         )
                     }
                     else -> {
                         HomeScreen(
-                            onOpenSettings = { currentScreen = Screen.Settings }
+                            onOpenSettings = { currentScreenState.value = Screen.Settings }
                         )
                     }
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        currentScreenState.value = Screen.Main
     }
 
     override fun onResume() {

@@ -1,8 +1,16 @@
 package id.karaoke.timerlauncher.service
 
 import android.accessibilityservice.AccessibilityService
+import android.app.ActivityManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
 import android.os.Build
 import android.view.accessibility.AccessibilityEvent
+import id.karaoke.timerlauncher.ui.MainActivity
 
 class TvRemoteAccessibilityService : AccessibilityService() {
 
@@ -61,6 +69,9 @@ object TvNavigationController {
             "ENTER" -> "66"
             "DEL", "BACKSPACE" -> "67"
             "SPACE" -> "62"
+            "MEDIA_PAUSE", "PAUSE" -> "127"
+            "MEDIA_STOP", "STOP" -> "86"
+            "MEDIA_PLAY_PAUSE", "PLAY_PAUSE" -> "85"
             "0" -> "7"
             "1" -> "8"
             "2" -> "9"
@@ -78,6 +89,86 @@ object TvNavigationController {
             true
         } catch (e: Exception) {
             false
+        }
+    }
+
+    /**
+     * Stops/pauses running media playback (e.g. YouTube), reclaims audio focus,
+     * and forces the TV back to the Karaoke Launcher Home screen.
+     */
+    fun stopPlaybackAndReturnHome(context: Context) {
+        // 1. Send MEDIA PAUSE and MEDIA STOP keycodes to pause any running video/music player
+        try {
+            sendNavKey("MEDIA_PAUSE")
+            sendNavKey("MEDIA_STOP")
+        } catch (e: Exception) {
+            android.util.Log.e("TvNavController", "Error sending media pause keys", e)
+        }
+
+        // 2. Request Audio Focus to force external apps (like YouTube TV) to abandon audio focus and pause
+        try {
+            val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+            if (audioManager != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                        .setAudioAttributes(
+                            AudioAttributes.Builder()
+                                .setUsage(AudioAttributes.USAGE_MEDIA)
+                                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                                .build()
+                        )
+                        .build()
+                    audioManager.requestAudioFocus(focusRequest)
+                } else {
+                    @Suppress("DEPRECATION")
+                    audioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("TvNavController", "Error requesting audio focus", e)
+        }
+
+        // 3. Perform Accessibility GLOBAL_ACTION_HOME if accessibility service is active
+        try {
+            accessibilityService?.performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME)
+        } catch (e: Exception) {
+            android.util.Log.e("TvNavController", "Error performing global home", e)
+        }
+
+        // 4. Fallback: shell input keyevent 3 (HOME)
+        try {
+            Runtime.getRuntime().exec(arrayOf("input", "keyevent", "3"))
+        } catch (_: Exception) {}
+
+        // 5. Explicitly launch MainActivity with clear top flags and PendingIntent
+        try {
+            val homeIntent = Intent(context, MainActivity::class.java).apply {
+                action = Intent.ACTION_MAIN
+                addCategory(Intent.CATEGORY_HOME)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            }
+            val pendingIntent = PendingIntent.getActivity(
+                context,
+                8888,
+                homeIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            try {
+                pendingIntent.send()
+            } catch (_: Exception) {
+                context.startActivity(homeIntent)
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("TvNavController", "Failed to launch MainActivity", e)
+        }
+
+        // 6. Kill background YouTube processes so it doesn't continue streaming/buffering
+        try {
+            val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+            activityManager?.killBackgroundProcesses("com.google.android.youtube.tv")
+            activityManager?.killBackgroundProcesses("com.google.android.youtube")
+        } catch (e: Exception) {
+            android.util.Log.e("TvNavController", "Error killing background YouTube", e)
         }
     }
 }
