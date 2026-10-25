@@ -261,7 +261,7 @@ fun HomeScreen(onOpenSettings: () -> Unit) {
     }
     val customerUrl = "http://$ipAddress:8080/customer"
     val customerQrBitmap = remember(customerUrl) {
-        QrCodeGenerator.generateQrBitmap(customerUrl, 200)
+        QrCodeGenerator.generateQrBitmap(customerUrl, 360)
     }
 
     Box(
@@ -663,33 +663,53 @@ fun HomeScreen(onOpenSettings: () -> Unit) {
                     }
                 }
 
-                // Corner QR Code: Mobile Remote for customers with Admin Control link
+                // Corner QR Code: Scan QR untuk Karaoke (Customer Mobile Remote)
                 Spacer(modifier = Modifier.width(16.dp))
                 Row(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
+                        .clip(RoundedCornerShape(18.dp))
                         .background(SurfaceDark)
-                        .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(16.dp))
-                        .padding(12.dp),
+                        .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(18.dp))
+                        .padding(14.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(68.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .size(116.dp)
+                            .clip(RoundedCornerShape(10.dp))
                             .background(Color.White)
-                            .padding(4.dp)
+                            .padding(6.dp)
                     ) {
                         Image(
                             bitmap = customerQrBitmap,
-                            contentDescription = "Mobile Remote QR",
+                            contentDescription = "Scan QR untuk Karaoke",
                             modifier = Modifier.fillMaxSize()
                         )
                     }
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text("Mobile Remote", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
-                        Text(customerUrl, fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = SuccessGreen)
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "Scan QR untuk Karaoke",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = "Remote & Pilih Lagu dari HP",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = TextMuted
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = customerUrl,
+                            fontSize = 11.sp,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.SemiBold,
+                            color = SuccessGreen
+                        )
                     }
                 }
             }
