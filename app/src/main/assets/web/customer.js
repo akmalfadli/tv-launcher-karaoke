@@ -39,6 +39,21 @@
   const pulseDot = document.getElementById("pulseDot");
   const connLabel = document.getElementById("connLabel");
 
+  // SPA Tab Elements
+  const tabSession = document.getElementById("tabSession");
+  const tabRemote = document.getElementById("tabRemote");
+  const viewSession = document.getElementById("viewSession");
+  const viewRemote = document.getElementById("viewRemote");
+  const btnGoToRemote = document.getElementById("btnGoToRemote");
+
+  // Immediate cache restore to eliminate any text flashing on load
+  try {
+    const cachedRoom = sessionStorage.getItem("karaoke_room_name");
+    const cachedCustomer = sessionStorage.getItem("karaoke_customer_name");
+    if (cachedRoom && roomTitle) roomTitle.textContent = cachedRoom;
+    if (cachedCustomer && customerInfo) customerInfo.textContent = `Tamu: ${cachedCustomer}`;
+  } catch (e) {}
+
   function vibrate() {
     if (navigator.vibrate) {
       navigator.vibrate(35);
@@ -81,6 +96,11 @@
         ? `Tamu: ${data.customerName}` 
         : "Sesi Tamu Ruangan";
     }
+
+    try {
+      if (data.roomName) sessionStorage.setItem("karaoke_room_name", data.roomName);
+      if (data.customerName) sessionStorage.setItem("karaoke_customer_name", data.customerName);
+    } catch (e) {}
 
     // Status chip
     if (sessionStatusChip) {
@@ -385,6 +405,49 @@
       if (key) sendKeypad(key);
     });
   });
+
+  // SPA Tab Switching Logic (Zero Reload, Zero Flicker)
+  function setTab(tabName, updateUrl = true) {
+    vibrate();
+    const isRemote = (tabName === "remote" || tabName === "/remote");
+    if (tabSession) tabSession.classList.toggle("active", !isRemote);
+    if (tabRemote) tabRemote.classList.toggle("active", isRemote);
+    if (viewSession) viewSession.classList.toggle("hidden", isRemote);
+    if (viewRemote) viewRemote.classList.toggle("hidden", !isRemote);
+
+    if (updateUrl) {
+      const targetPath = isRemote ? "/remote" : "/customer";
+      if (window.location.pathname !== targetPath) {
+        try {
+          window.history.pushState({ tab: isRemote ? "remote" : "session" }, "", targetPath);
+        } catch (e) {}
+      }
+    }
+  }
+
+  tabSession?.addEventListener("click", (e) => {
+    e.preventDefault();
+    setTab("session");
+  });
+
+  tabRemote?.addEventListener("click", (e) => {
+    e.preventDefault();
+    setTab("remote");
+  });
+
+  btnGoToRemote?.addEventListener("click", (e) => {
+    e.preventDefault();
+    setTab("remote");
+  });
+
+  window.addEventListener("popstate", () => {
+    const isRemote = window.location.pathname.includes("remote");
+    setTab(isRemote ? "remote" : "session", false);
+  });
+
+  // Activate initial tab from URL
+  const initialIsRemote = window.location.pathname.includes("remote");
+  setTab(initialIsRemote ? "remote" : "session", false);
 
   // Initial fetch and polling every 2.5 seconds
   fetchStatus();

@@ -137,7 +137,7 @@ class LocalServer(
                 serveAsset(call, "web/customer.html", ContentType.Text.Html)
             }
             get("/remote") {
-                serveAsset(call, "web/remote.html", ContentType.Text.Html)
+                serveAsset(call, "web/customer.html", ContentType.Text.Html)
             }
             get("/customer.css") {
                 serveAsset(call, "web/customer.css", ContentType.Text.CSS)
