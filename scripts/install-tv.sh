@@ -51,8 +51,11 @@ adb -s "${TV_IP}:5555" shell dumpsys deviceidle whitelist +"${PACKAGE}"
 echo "==> Setting default launcher / home activity..."
 adb -s "${TV_IP}:5555" shell cmd package set-home-activity "${MAIN_ACTIVITY}"
 
-echo "==> Disabling Google TV default launcher (launcherx)..."
-adb -s "${TV_IP}:5555" shell pm disable-user --user 0 com.google.android.apps.tv.launcherx || true
+echo "==> Ensuring Google TV default launcher (launcherx) remains enabled..."
+# CRITICAL: On Sony Bravia Google TV, disabling launcherx causes a system service crash & watchdog reboot loop.
+# Setting home activity above is already sufficient to make our app default.
+adb -s "${TV_IP}:5555" shell cmd package enable com.google.android.apps.tv.launcherx || true
+adb -s "${TV_IP}:5555" shell pm enable com.google.android.apps.tv.launcherx || true
 
 echo "==> Starting application..."
 adb -s "${TV_IP}:5555" shell am start -n "${MAIN_ACTIVITY}"

@@ -43,14 +43,23 @@ class TimerService : Service() {
 
         // Start foreground
         val notification = buildNotification(app.timerEngine.state.value)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(
-                NOTIFICATION_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-            )
-        } else {
-            startForeground(NOTIFICATION_ID, notification)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(
+                    NOTIFICATION_ID,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                )
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+        } catch (e: Throwable) {
+            android.util.Log.e("TimerService", "Failed to startForeground with type, falling back to basic startForeground", e)
+            try {
+                startForeground(NOTIFICATION_ID, notification)
+            } catch (e2: Throwable) {
+                android.util.Log.e("TimerService", "Failed basic startForeground fallback", e2)
+            }
         }
 
         // Observe timer state

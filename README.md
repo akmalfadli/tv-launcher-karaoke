@@ -158,8 +158,8 @@ Skrip ini akan secara otomatis:
 - Mengompilasi dan memasang APK ke TV.
 - Memberikan izin overlay (`SYSTEM_ALERT_WINDOW`).
 - Mengecualikan aplikasi dari penghemat baterai (*battery optimization whitelist*).
-- Menjadikan aplikasi sebagai Home Activity utama.
-- Menonaktifkan launcher bawaan Google TV (`launcherx`) agar tombol **Home** pada remote membuka launcher karaoke.
+- Menjadikan aplikasi sebagai Home Activity utama (`cmd package set-home-activity`).
+- Memastikan launcher bawaan Google TV (`launcherx`) tetap aktif agar tidak memicu watchdog bootloop pada sistem Sony Bravia.
 - Membuka aplikasi di TV.
 
 ### 3. Selesaikan Setup di Layar TV
@@ -264,11 +264,22 @@ File APK hasil kompilasi berlokasi di:
 
 ## 🔄 Perintah Pemulihan (Recovery)
 
-Jika suatu saat TV ingin dikembalikan ke launcher standar Google TV bawaan pabrik, sambungkan TV ke laptop lewat ADB dan jalankan:
+Jika terjadi kendala bootloop atau TV ingin dipulihkan / dikembalikan ke launcher Google TV bawaan, jalankan skrip pemulihan otomatis:
+
+```bash
+# Pemulihan otomatis (via WiFi atau USB)
+./scripts/rescue-tv.sh <IP_TV>
+
+# Atau jika TV terhubung kabel USB ke laptop:
+./scripts/rescue-tv.sh
+```
+
+Atau secara manual lewat ADB:
 
 ```bash
 # Mengaktifkan kembali launcher Google TV bawaan
 adb connect <IP_TV>:5555
+adb shell cmd package enable com.google.android.apps.tv.launcherx
 adb shell pm enable com.google.android.apps.tv.launcherx
 
 # (Opsional) Menghapus aplikasi karaoke launcher

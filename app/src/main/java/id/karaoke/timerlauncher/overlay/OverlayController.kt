@@ -192,8 +192,13 @@ class OverlayController(private val context: Context) {
         ))
 
         // Initial WindowManager add
-        val initialParams = createLayoutParams(isFullScreen = false)
-        windowManager.addView(root, initialParams)
+        try {
+            val initialParams = createLayoutParams(isFullScreen = false)
+            windowManager.addView(root, initialParams)
+        } catch (e: Exception) {
+            android.util.Log.e("OverlayController", "Failed to add initial overlay view to WindowManager", e)
+            overlayRootView = null
+        }
     }
 
     private fun updateLayoutParams(isFullScreen: Boolean) {

@@ -118,7 +118,7 @@ Keputusan: semua ruangan memakai **Sony Bravia XR X90 series 55 inci**. Seri ini
 
 | Aspek | Dampak pada aplikasi | Keputusan |
 | --- | --- | --- |
-| Launcher Google TV | Google TV tidak menyediakan pilihan layar utama; tombol Home selalu membuka launcher bawaan (`com.google.android.apps.tv.launcherx`) | Nonaktifkan launcher bawaan lewat ADB saat pemasangan sehingga tombol Home membuka aplikasi ini; perlu diverifikasi di TV nyata |
+| Launcher Google TV | Google TV tidak menyediakan pilihan antarmuka di UI sistem | Atur launcher dengan `cmd package set-home-activity`. PENTING: Jangan menonaktifkan `launcherx` (`pm disable-user`), karena layanan internal Sony Bravia bergantung padanya dan akan memicu reboot otomatis / bootloop |
 | Izin overlay | Menu "tampil di atas aplikasi lain" umumnya tidak tersedia di Google TV | Izin diberikan lewat ADB (`appops`) sebagai cara utama, bukan cadangan |
 | Resolusi | Panel 4K, tetapi UI aplikasi Android TV dirender di 1920x1080 (dp) | Desain UI dan overlay untuk 1080p; teks overlay minimal setara 32sp agar terbaca dari jarak 3 meter di layar 55 inci |
 | Remote | Remote Sony punya tombol pintas (YouTube, Netflix, Google Assistant), tombol Settings, dan tombol warna | Tombol pintas boleh dipakai (overlay tetap tampil); tombol warna dipakai untuk F17; akses ke menu Settings Android dibatasi lewat Pro mode Sony jika tersedia |
@@ -144,10 +144,9 @@ adb connect <ip-tv>:5555
 adb install -r karaoke-launcher.apk
 adb shell appops set <package> SYSTEM_ALERT_WINDOW allow
 adb shell dumpsys deviceidle whitelist +<package>
-adb shell cmd package set-home-activity <package>/.MainActivity
-# Google TV (Sony Bravia XR X90): nonaktifkan launcher bawaan agar tombol Home membuka aplikasi ini
-adb shell pm disable-user --user 0 com.google.android.apps.tv.launcherx
-# Pemulihan jika perlu: adb shell pm enable com.google.android.apps.tv.launcherx
+adb shell cmd package set-home-activity <package>/.ui.MainActivity
+# PENTING (Sony Bravia XR): Jangan disable launcherx karena memicu bootloop. Pastikan tetap aktif:
+adb shell cmd package enable com.google.android.apps.tv.launcherx
 ```
 
 Setelah skrip dijalankan, layar setup (F18) otomatis melewati langkah izin yang sudah aktif dan langsung meminta nama ruangan dan PIN admin. Karena pelanggan memakai WiFi yang sama dengan TV, debugging ADB (USB dan jaringan) **wajib dimatikan** setelah pemasangan, dan layar setup memberi peringatan jika debugging masih aktif.
@@ -298,3 +297,4 @@ Belum ada tanggal. Jadwal ditetapkan setelah jumlah ruangan dan model TV dikonfi
 | 1.3 | Oct 24, 2026 | Keputusan jaringan: satu WiFi lokal bersama untuk TV, HP admin, dan HP pelanggan; ADB wajib dimatikan setelah pemasangan; keamanan diperkuat (token di setiap endpoint admin, batas percobaan PIN per IP, masa berlaku token, WiFi berkata sandi); risiko dan pertanyaan terbuka diperbarui |
 | 1.4 | Oct 24, 2026 | Perangkat target Sony Bravia XR X90 series 55 inci (Google TV); bagian baru Perangkat target; penggantian launcher Google TV lewat ADB; `minSdk` 29; Bravia IP Control untuk F15 dan F16; risiko launcher Google TV dan akses menu Settings; pertanyaan terbuka diperbarui |
 | 1.5 | Oct 25, 2026 | Penambahan fitur Riwayat Rental dengan nama pelanggan, tanggal/jam mulai, durasi awal, perpanjangan, jam selesai, dan status sewa di HP operator (F14 dipindahkan ke P0/MVP) |
+| 1.6 | Oct 25, 2026 | Perbaikan kritis pencegahan bootloop di Sony Bravia XR (jangan menonaktifkan `launcherx`, perbaikan pengecekan API 34 pada foreground service type `specialUse`, dan penambahan skrip `rescue-tv.sh`) |
