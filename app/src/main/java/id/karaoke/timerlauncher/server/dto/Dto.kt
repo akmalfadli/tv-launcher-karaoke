@@ -20,6 +20,16 @@ data class ErrorResponse(
 )
 
 @Serializable
+data class CustomerRequestDto(
+    val id: String,
+    val type: String, // "EXTENSION" or "WAITER"
+    val requestedMinutes: Int = 0,
+    val message: String = "",
+    val timestamp: Long = 0L,
+    val status: String = "PENDING" // "PENDING", "ACCEPTED", "REJECTED"
+)
+
+@Serializable
 data class StatusDto(
     val roomName: String,
     val status: String,
@@ -29,7 +39,38 @@ data class StatusDto(
     val restoredAfterReboot: Boolean,
     val appVersion: String = "1.0.0",
     val warnings: List<String> = emptyList(),
-    val customerName: String? = null
+    val customerName: String? = null,
+    val pendingCustomerRequest: CustomerRequestDto? = null
+)
+
+@Serializable
+data class CustomerStatusDto(
+    val roomName: String,
+    val status: String,
+    val remainingMs: Long,
+    val totalMs: Long,
+    val formattedRemaining: String,
+    val customerName: String? = null,
+    val operatorPhone: String = "",
+    val pendingRequest: CustomerRequestDto? = null
+)
+
+@Serializable
+data class CustomerActionRequest(
+    val type: String = "EXTENSION", // "EXTENSION" or "WAITER"
+    val requestedMinutes: Int = 60,
+    val message: String = ""
+)
+
+@Serializable
+data class CustomerVolumeRequest(
+    val action: String = "UP" // "UP", "DOWN", "MUTE"
+)
+
+@Serializable
+data class RespondCustomerRequest(
+    val requestId: String,
+    val action: String = "ACCEPT" // "ACCEPT" or "REJECT"
 )
 
 @Serializable

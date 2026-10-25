@@ -1,23 +1,14 @@
 package id.karaoke.timerlauncher.server
 
 import android.content.Context
+import android.content.Intent
+import android.media.AudioManager
 import id.karaoke.timerlauncher.auth.LoginRateLimiter
 import id.karaoke.timerlauncher.auth.PinHasher
 import id.karaoke.timerlauncher.auth.SessionManager
 import id.karaoke.timerlauncher.device.DeviceHealth
 import id.karaoke.timerlauncher.App
-import id.karaoke.timerlauncher.server.dto.AppDto
-import id.karaoke.timerlauncher.server.dto.CustomerNameRequest
-import id.karaoke.timerlauncher.server.dto.ErrorResponse
-import id.karaoke.timerlauncher.server.dto.LoginRequest
-import id.karaoke.timerlauncher.server.dto.LoginResponse
-import id.karaoke.timerlauncher.server.dto.SettingsDto
-import id.karaoke.timerlauncher.server.dto.StatusDto
-import id.karaoke.timerlauncher.server.dto.TimerActionRequest
-import id.karaoke.timerlauncher.server.dto.ToggleAppRequest
-import id.karaoke.timerlauncher.server.dto.UpdateSettingsRequest
-import id.karaoke.timerlauncher.server.dto.UploadImageRequest
-import id.karaoke.timerlauncher.server.dto.WsMessage
+import id.karaoke.timerlauncher.server.dto.*
 import id.karaoke.timerlauncher.settings.OverlayCorner
 import id.karaoke.timerlauncher.settings.OverlaySize
 import id.karaoke.timerlauncher.settings.SettingsRepository
@@ -141,6 +132,15 @@ class LocalServer(
             }
             get("/icon.svg") {
                 serveAsset(call, "web/icon.svg", ContentType.Image.SVG)
+            }
+            get("/customer") {
+                serveAsset(call, "web/customer.html", ContentType.Text.Html)
+            }
+            get("/customer.css") {
+                serveAsset(call, "web/customer.css", ContentType.Text.CSS)
+            }
+            get("/customer.js") {
+                serveAsset(call, "web/customer.js", ContentType.Application.JavaScript)
             }
             get("/player") {
                 val v = call.request.queryParameters["v"] ?: ""
@@ -303,6 +303,99 @@ class LocalServer(
                 timerEngine.reset()
                 settingsRepository.finishRental("RESET")
                 settingsRepository.recordAction("TIMER_RESET", "Reset timer", call.request.origin.remoteHost)
+                call.respond(createStatusDto())
+            }
+
+            // Customer Remote Endpoints (Accessible by room guests)
+            get("/api/customer/status") {
+                call.respond(createCustomerStatusDto())
+            }
+
+            post("/api/customer/request") {
+                val req = runCatching { call.receive<CustomerActionRequest>() }.getOrNull()
+                if (req == null) {
+                    call.respond(HttpStatusCode.BadRequest, ErrorResponse("Payload tidak valid"))
+                    return@post
+                }
+                val created = settingsRepository.submitCustomerRequest(
+                    type = req.type,
+                    requestedMinutes = req.requestedMinutes,
+                    message = req.message
+                )
+                settingsRepository.recordAction(
+                    "CUSTOMER_REQUEST",
+                    "Permintaan pelanggan: ${req.type} (${req.requestedMinutes}m)",
+                    call.request.origin.remoteHost
+                )
+                wsHub.broadcast(WsMessage("state", createStatusDto()))
+                call.respond(created)
+            }
+
+            post("/api/customer/volume") {
+                val req = runCatching { call.receive<CustomerVolumeRequest>() }.getOrNull()
+                val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+                if (audioManager != null && req != null) {
+                    when (req.action.uppercase()) {
+                        "UP" -> audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
+                        "DOWN" -> audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI)
+                        "MUTE" -> audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_TOGGLE_MUTE, AudioManager.FLAG_SHOW_UI)
+                    }
+                }
+                call.respond(mapOf("status" to "ok"))
+            }
+
+            post("/api/customer/open-youtube") {
+                try {
+                    val pm = context.packageManager
+                    val ytIntent = pm.getLaunchIntentForPackage("com.google.android.youtube.tv")
+                        ?: pm.getLaunchIntentForPackage("com.google.android.youtube")
+                        ?: Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://www.youtube.com"))
+                    ytIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context.startActivity(ytIntent)
+                    settingsRepository.recordAction("CUSTOMER_YOUTUBE", "Pelanggan membuka YouTube dari remote HP", call.request.origin.remoteHost)
+                    call.respond(mapOf("status" to "ok"))
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.InternalServerError, ErrorResponse("Gagal membuka YouTube: ${e.message}"))
+                }
+            }
+
+            // Admin: Respond to Customer Request
+            post("/api/admin/customer-request/respond") {
+                if (!authenticate(call)) return@post
+                val req = runCatching { call.receive<RespondCustomerRequest>() }.getOrNull()
+                if (req == null) {
+                    call.respond(HttpStatusCode.BadRequest, ErrorResponse("Payload tidak valid"))
+                    return@post
+                }
+
+                val pending = settingsRepository.getPendingCustomerRequest()
+                if (pending != null && pending.id == req.requestId) {
+                    if (req.action.equals("ACCEPT", ignoreCase = true)) {
+                        if (pending.type == "EXTENSION" && pending.requestedMinutes > 0) {
+                            settingsRepository.extendRental(pending.requestedMinutes)
+                            timerEngine.adjust(pending.requestedMinutes)
+                            settingsRepository.recordAction(
+                                "CUSTOMER_REQUEST_ACCEPTED",
+                                "Admin menyetujui tambah ${pending.requestedMinutes} menit dari pelanggan",
+                                call.request.origin.remoteHost
+                            )
+                        } else {
+                            settingsRepository.recordAction(
+                                "CUSTOMER_REQUEST_ACCEPTED",
+                                "Admin melayani panggilan ${pending.type}",
+                                call.request.origin.remoteHost
+                            )
+                        }
+                    } else {
+                        settingsRepository.recordAction(
+                            "CUSTOMER_REQUEST_REJECTED",
+                            "Admin menolak permintaan ${pending.type}",
+                            call.request.origin.remoteHost
+                        )
+                    }
+                }
+                settingsRepository.clearCustomerRequest(req.requestId)
+                wsHub.broadcast(WsMessage("state", createStatusDto()))
                 call.respond(createStatusDto())
             }
 
@@ -561,6 +654,7 @@ class LocalServer(
         val settings = settingsRepository.getSettings()
         val deviceStatus = DeviceHealth.getDeviceStatus(context)
         val activeCustomer = settingsRepository.getActiveCustomerName()
+        val pendingCustomerReq = settingsRepository.getPendingCustomerRequest()
 
         return StatusDto(
             roomName = settings.roomName,
@@ -571,7 +665,36 @@ class LocalServer(
             restoredAfterReboot = timerState.restoredAfterReboot,
             appVersion = "1.0.0",
             warnings = deviceStatus.warnings,
-            customerName = activeCustomer
+            customerName = activeCustomer,
+            pendingCustomerRequest = pendingCustomerReq
+        )
+    }
+
+    suspend fun createCustomerStatusDto(): CustomerStatusDto {
+        val timerState = timerEngine.state.value
+        val settings = settingsRepository.getSettings()
+        val activeCustomer = settingsRepository.getActiveCustomerName()
+        val pendingCustomerReq = settingsRepository.getPendingCustomerRequest()
+
+        val totalSeconds = (timerState.remainingMs / 1000).coerceAtLeast(0)
+        val hours = totalSeconds / 3600
+        val minutes = (totalSeconds % 3600) / 60
+        val seconds = totalSeconds % 60
+        val formatted = if (hours > 0) {
+            String.format(java.util.Locale.US, "%02d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            String.format(java.util.Locale.US, "%02d:%02d", minutes, seconds)
+        }
+
+        return CustomerStatusDto(
+            roomName = settings.roomName,
+            status = timerState.status.name,
+            remainingMs = timerState.remainingMs,
+            totalMs = timerState.totalMs,
+            formattedRemaining = formatted,
+            customerName = activeCustomer,
+            operatorPhone = settings.operatorPhone,
+            pendingRequest = pendingCustomerReq
         )
     }
 
@@ -580,6 +703,12 @@ class LocalServer(
             // Observe state changes and broadcast
             launch {
                 timerEngine.state.collectLatest {
+                    wsHub.broadcast(WsMessage("state", createStatusDto()))
+                }
+            }
+            // Observe pending customer requests
+            launch {
+                settingsRepository.pendingCustomerRequest.collectLatest {
                     wsHub.broadcast(WsMessage("state", createStatusDto()))
                 }
             }

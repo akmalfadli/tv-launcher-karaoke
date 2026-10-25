@@ -395,5 +395,30 @@ class SettingsRepository(private val context: Context) {
             mutableListOf()
         }
     }
+
+    private val _pendingCustomerRequest = kotlinx.coroutines.flow.MutableStateFlow<id.karaoke.timerlauncher.server.dto.CustomerRequestDto?>(null)
+    val pendingCustomerRequest: kotlinx.coroutines.flow.StateFlow<id.karaoke.timerlauncher.server.dto.CustomerRequestDto?> = _pendingCustomerRequest
+
+    fun getPendingCustomerRequest(): id.karaoke.timerlauncher.server.dto.CustomerRequestDto? = _pendingCustomerRequest.value
+
+    fun submitCustomerRequest(type: String, requestedMinutes: Int, message: String): id.karaoke.timerlauncher.server.dto.CustomerRequestDto {
+        val req = id.karaoke.timerlauncher.server.dto.CustomerRequestDto(
+            id = UUID.randomUUID().toString(),
+            type = type,
+            requestedMinutes = requestedMinutes,
+            message = message,
+            timestamp = System.currentTimeMillis(),
+            status = "PENDING"
+        )
+        _pendingCustomerRequest.value = req
+        return req
+    }
+
+    fun clearCustomerRequest(requestId: String? = null) {
+        val current = _pendingCustomerRequest.value
+        if (requestId == null || current?.id == requestId) {
+            _pendingCustomerRequest.value = null
+        }
+    }
 }
 

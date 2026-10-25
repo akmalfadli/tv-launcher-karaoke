@@ -36,6 +36,21 @@
       </button>
     </header>
 
+    <!-- Customer Request Notification Banner (Real-time from room guests) -->
+    <div id="customerRequestBanner" class="customer-request-banner hidden">
+      <div class="cr-left">
+        <div class="cr-pulse-dot"></div>
+        <div class="cr-info">
+          <div class="cr-title" id="crTitle">Permintaan Tamu Ruangan</div>
+          <div class="cr-desc" id="crDesc">Tamu meminta tambahan waktu +1 Jam</div>
+        </div>
+      </div>
+      <div class="cr-actions">
+        <button id="btnCrAccept" class="btn btn-primary btn-sm">Setujui</button>
+        <button id="btnCrReject" class="btn btn-secondary btn-sm">Tolak</button>
+      </div>
+    </div>
+
     <!-- Warnings / Alert Banner -->
     <div id="warningsBanner" class="warnings-banner hidden"></div>
 

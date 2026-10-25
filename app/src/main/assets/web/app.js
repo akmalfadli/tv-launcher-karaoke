@@ -32,6 +32,12 @@
   const connectionText = document.getElementById("connectionText");
   const roomNameHeader = document.getElementById("roomNameHeader");
   const warningsBanner = document.getElementById("warningsBanner");
+  const customerRequestBanner = document.getElementById("customerRequestBanner");
+  const crTitle = document.getElementById("crTitle");
+  const crDesc = document.getElementById("crDesc");
+  const btnCrAccept = document.getElementById("btnCrAccept");
+  const btnCrReject = document.getElementById("btnCrReject");
+  let activePendingRequest = null;
   const statusBadge = document.getElementById("statusBadge");
   const activeCustomerBadge = document.getElementById("activeCustomerBadge");
   const activeCustomerName = document.getElementById("activeCustomerName");
@@ -455,6 +461,26 @@
       customerInputSection.classList.remove("hidden");
     }
 
+    // Customer pending request banner
+    if (state.pendingCustomerRequest && state.pendingCustomerRequest.status === "PENDING") {
+      activePendingRequest = state.pendingCustomerRequest;
+      if (customerRequestBanner) {
+        customerRequestBanner.classList.remove("hidden");
+        if (activePendingRequest.type === "EXTENSION") {
+          crTitle.textContent = `Permintaan Tambah +${activePendingRequest.requestedMinutes / 60} Jam`;
+          crDesc.textContent = `Tamu meminta tambahan waktu ${activePendingRequest.requestedMinutes} menit`;
+        } else {
+          crTitle.textContent = "Panggilan Bantuan / Pelayan";
+          crDesc.textContent = "Tamu ruangan memanggil staf ke ruangan";
+        }
+      }
+    } else {
+      activePendingRequest = null;
+      if (customerRequestBanner) {
+        customerRequestBanner.classList.add("hidden");
+      }
+    }
+
     // Start local interpolator
     if (localTickerTimer) clearInterval(localTickerTimer);
     if (state.status === "RUNNING") {
@@ -602,6 +628,35 @@
       callTimerApi("adjust", { minutes });
     });
   });
+
+  // Admin Response to Customer Request
+  async function respondCustomerRequest(action) {
+    if (!activePendingRequest || !token) return;
+    try {
+      const res = await fetch("/api/admin/customer-request/respond", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          requestId: activePendingRequest.id,
+          action: action
+        })
+      });
+      if (res.status === 401) {
+        btnLogout.click();
+        return;
+      }
+      const data = await res.json();
+      applyState(data);
+    } catch (e) {
+      console.error("Gagal memproses permintaan tamu:", e);
+    }
+  }
+
+  btnCrAccept?.addEventListener("click", () => respondCustomerRequest("ACCEPT"));
+  btnCrReject?.addEventListener("click", () => respondCustomerRequest("REJECT"));
 
   // Rental History Loader
   function formatRupiah(num) {

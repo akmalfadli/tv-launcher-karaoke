@@ -259,6 +259,10 @@ fun HomeScreen(onOpenSettings: () -> Unit) {
     val qrBitmap = remember(adminUrl) {
         QrCodeGenerator.generateQrBitmap(adminUrl, 200)
     }
+    val customerUrl = "http://$ipAddress:8080/customer"
+    val customerQrBitmap = remember(customerUrl) {
+        QrCodeGenerator.generateQrBitmap(customerUrl, 200)
+    }
 
     Box(
         modifier = Modifier
@@ -659,7 +663,7 @@ fun HomeScreen(onOpenSettings: () -> Unit) {
                     }
                 }
 
-                // Corner QR Code (visible only when timer is IDLE)
+                // Corner QR Code: Operator QR when IDLE, Customer Remote QR when ACTIVE
                 if (timerState.isIdle) {
                     Spacer(modifier = Modifier.width(16.dp))
                     Row(
@@ -687,6 +691,35 @@ fun HomeScreen(onOpenSettings: () -> Unit) {
                         Column {
                             Text("Remote Operator", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                             Text(adminUrl, fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = AccentAmber)
+                        }
+                    }
+                } else {
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(SurfaceDark)
+                            .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(16.dp))
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.White)
+                                .padding(4.dp)
+                        ) {
+                            Image(
+                                bitmap = customerQrBitmap,
+                                contentDescription = "Customer Remote QR",
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        Column {
+                            Text("Remote Tamu", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                            Text(customerUrl, fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = SuccessGreen)
                         }
                     }
                 }
