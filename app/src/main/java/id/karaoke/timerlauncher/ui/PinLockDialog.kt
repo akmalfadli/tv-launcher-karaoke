@@ -226,14 +226,14 @@ fun PinLockDialog(
 @Composable
 fun DpadKeyButton(
     text: String,
+    modifier: Modifier = Modifier.size(72.dp, 44.dp),
     onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
 
     Box(
-        modifier = Modifier
-            .size(72.dp, 48.dp)
+        modifier = modifier
             .clip(RoundedCornerShape(12.dp))
             .background(if (isFocused) PrimaryIndigo else Color(0x14FFFFFF))
             .border(

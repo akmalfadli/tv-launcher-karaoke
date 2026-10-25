@@ -30,6 +30,8 @@ class App : Application() {
         private set
     lateinit var localServer: LocalServer
         private set
+    lateinit var appDiscoveryManager: id.karaoke.timerlauncher.appdiscovery.AppDiscoveryManager
+        private set
 
     val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -55,6 +57,7 @@ class App : Application() {
         settingsRepository = SettingsRepository(this)
         sessionManager = SessionManager()
         rateLimiter = LoginRateLimiter()
+        appDiscoveryManager = id.karaoke.timerlauncher.appdiscovery.AppDiscoveryManager(this)
 
         timerEngine = TimerEngine(
             clock = clock,

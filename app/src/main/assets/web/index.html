@@ -2,31 +2,79 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Admin Karaoke Remote</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0E0F12">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Console Remote • Karaoke Admin</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app-container">
-    <!-- Header -->
+    <!-- Top System Console Bar -->
     <header class="header">
       <div class="room-info">
+        <div class="micro-label">DEVICE CONSOLE</div>
         <h1 id="roomNameHeader">Ruang Karaoke</h1>
         <div class="connection-status">
           <span class="status-dot" id="statusDot"></span>
-          <span id="connectionText">Menghubungkan...</span>
+          <span id="connectionText">OFFLINE</span>
         </div>
       </div>
-      <button id="btnLogout" class="btn-icon" title="Keluar">⎋</button>
+      <button id="btnLogout" class="btn-icon" title="Keluar" aria-label="Keluar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+      </button>
     </header>
 
-    <!-- Warnings Container -->
+    <!-- Warnings / Alert Banner -->
     <div id="warningsBanner" class="warnings-banner hidden"></div>
 
-    <!-- Login View -->
+    <!-- Segmented Navigation Bar -->
+    <nav class="nav-tabs hidden" id="navTabs">
+      <button class="nav-tab active" id="tabTimer">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span class="nav-tab-text">TIMER</span>
+      </button>
+      <button class="nav-tab" id="tabApps">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        <span class="nav-tab-text">APLIKASI</span>
+      </button>
+      <button class="nav-tab" id="tabHistory">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"></line>
+          <line x1="12" y1="20" x2="12" y2="4"></line>
+          <line x1="6" y1="20" x2="6" y2="14"></line>
+        </svg>
+        <span class="nav-tab-text">REKAP</span>
+      </button>
+      <button class="nav-tab" id="tabSettings">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        <span class="nav-tab-text">PENGATURAN</span>
+      </button>
+    </nav>
+
+    <!-- 1. Security Pin Login Section -->
     <section id="loginSection" class="card login-card">
-      <h2>Masuk Admin</h2>
-      <p class="subtitle">Masukkan PIN admin ruangan ini</p>
+      <div class="section-badge-header">
+        <span class="micro-label">AUTHENTICATION GATEWAY</span>
+      </div>
+      <h2>Masuk Administrator</h2>
+      <p class="subtitle">Otentikasi PIN 4–6 digit ruangan ini</p>
       
       <div class="pin-display">
         <input type="password" id="pinInput" maxlength="6" inputmode="numeric" placeholder="••••" autocomplete="off" />
@@ -44,63 +92,396 @@
         <button class="key-btn" data-val="7">7</button>
         <button class="key-btn" data-val="8">8</button>
         <button class="key-btn" data-val="9">9</button>
-        <button class="key-btn text-btn" id="btnKeyClear">C</button>
+        <button class="key-btn text-btn" id="btnKeyClear">CLR</button>
         <button class="key-btn" data-val="0">0</button>
-        <button class="key-btn text-btn" id="btnKeyDelete">⌫</button>
+        <button class="key-btn text-btn" id="btnKeyDelete">DEL</button>
       </div>
 
-      <button id="btnLogin" class="btn btn-primary btn-block">Masuk</button>
+      <button id="btnLogin" class="btn btn-primary btn-block">Buka Kontrol</button>
     </section>
 
-    <!-- Dashboard View -->
+    <!-- 2. Dashboard View (Kontrol Timer) -->
     <section id="dashboardSection" class="dashboard hidden">
-      <!-- Big Timer Card -->
+      <!-- Main Digital Readout Monitor -->
       <div class="card timer-card">
-        <div class="status-badge" id="statusBadge">SIAP</div>
-        <div class="timer-display" id="timerDisplay">00:00</div>
+        <div class="timer-card-header">
+          <span class="micro-label">SESSION MONITOR</span>
+          <div class="status-badge" id="statusBadge">SIAP</div>
+        </div>
+        
+        <!-- Active Customer Info Bar -->
+        <div id="activeCustomerBadge" class="customer-badge hidden" title="Klik untuk ubah nama pelanggan">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span id="activeCustomerName">Pelanggan</span>
+          <span class="edit-hint">EDIT</span>
+        </div>
+
+        <div class="timer-display-wrap">
+          <div class="timer-display" id="timerDisplay">00:00:00</div>
+        </div>
         
         <div class="progress-bar-container">
           <div class="progress-bar" id="progressBar"></div>
         </div>
 
         <div id="finishNotice" class="finish-notice hidden">
-          ⚠️ WAKTU HABIS! Perpanjang atau hentikan sewa.
+          <span class="alert-pulse"></span>
+          <span>WAKTU SELESAI • Perpanjang atau reset sesi</span>
         </div>
       </div>
 
-      <!-- Quick Presets -->
-      <div class="section-title">Mulai Baru (Menit)</div>
-      <div class="grid grid-4">
-        <button class="btn btn-preset" data-minutes="30">30m</button>
-        <button class="btn btn-preset" data-minutes="60">60m</button>
-        <button class="btn btn-preset" data-minutes="90">90m</button>
-        <button class="btn btn-preset" data-minutes="120">120m</button>
+      <!-- Customer Session Tagging -->
+      <div class="card control-zone" id="customerInputSection">
+        <div class="zone-label-row">
+          <span class="micro-label">IDENTITAS PELANGGAN</span>
+          <span class="micro-label-muted">OPSIONAL</span>
+        </div>
+        <input type="text" id="customerNameInput" class="input-text" placeholder="Ketik nama pelanggan (misal: Bpk. Hendra)" autocomplete="off" />
       </div>
 
-      <!-- Main Controls -->
-      <div class="section-title">Kontrol Timer</div>
-      <div class="grid grid-2">
-        <button id="btnPauseResume" class="btn btn-warning">Jeda</button>
-        <button id="btnStop" class="btn btn-danger">Hentikan</button>
+      <!-- Quick Session Preset Buttons -->
+      <div class="card control-zone">
+        <div class="zone-label-row">
+          <span class="micro-label">MULAI SESI BARU</span>
+          <span class="micro-label-muted">DURASI</span>
+        </div>
+        <div class="grid grid-4">
+          <button class="btn btn-preset" data-minutes="30">
+            <span class="preset-val">30</span>
+            <span class="preset-unit">MIN</span>
+          </button>
+          <button class="btn btn-preset" data-minutes="60">
+            <span class="preset-val">60</span>
+            <span class="preset-unit">MIN</span>
+          </button>
+          <button class="btn btn-preset" data-minutes="90">
+            <span class="preset-val">90</span>
+            <span class="preset-unit">MIN</span>
+          </button>
+          <button class="btn btn-preset" data-minutes="120">
+            <span class="preset-val">120</span>
+            <span class="preset-unit">MIN</span>
+          </button>
+        </div>
       </div>
 
-      <!-- Adjustments -->
-      <div class="section-title">Tambah / Kurang Waktu</div>
-      <div class="grid grid-3">
-        <button class="btn btn-adjust" data-adjust="5">+5 Menit</button>
-        <button class="btn btn-adjust" data-adjust="10">+10 Menit</button>
-        <button class="btn btn-adjust" data-adjust="-5">-5 Menit</button>
+      <!-- Hardware Action Rocker Controls -->
+      <div class="card control-zone">
+        <div class="zone-label-row">
+          <span class="micro-label">AKSI KONTROL SISTEM</span>
+        </div>
+        <div class="grid grid-2">
+          <button id="btnPauseResume" class="btn btn-warning">
+            <span id="pauseResumeIcon" class="btn-icon-indicator">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+            </span>
+            <span id="pauseResumeText">Jeda</span>
+          </button>
+          <button id="btnStop" class="btn btn-danger">
+            <span class="btn-icon-indicator">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16"></rect></svg>
+            </span>
+            <span>Hentikan</span>
+          </button>
+        </div>
       </div>
 
-      <!-- Quick Extend (visible when finished) -->
-      <div id="extendControls" class="extend-section hidden">
-        <div class="section-title">Perpanjang Waktu</div>
+      <!-- Fine-tune Increments -->
+      <div class="card control-zone">
+        <div class="zone-label-row">
+          <span class="micro-label">PENYESUAIAN WAKTU</span>
+          <span class="micro-label-muted">STEP IN TIME</span>
+        </div>
+        <div class="grid grid-3">
+          <button class="btn btn-adjust" data-adjust="5">+5 Mnt</button>
+          <button class="btn btn-adjust" data-adjust="10">+10 Mnt</button>
+          <button class="btn btn-adjust" data-adjust="-5">-5 Mnt</button>
+        </div>
+      </div>
+
+      <!-- Post-Expiry Quick Extend (visible when finished) -->
+      <div id="extendControls" class="card control-zone extend-section hidden">
+        <div class="zone-label-row">
+          <span class="micro-label alert-text">PERPANJANG SEGERA</span>
+          <span class="micro-label-muted">POST-EXPIRY</span>
+        </div>
         <div class="grid grid-2">
           <button class="btn btn-primary btn-adjust" data-adjust="30">+30 Menit</button>
           <button class="btn btn-primary btn-adjust" data-adjust="60">+60 Menit</button>
         </div>
       </div>
     </section>
+
+    <!-- 3. Apps View (Kelola Aplikasi TV) -->
+    <section id="appsSection" class="card history-section hidden">
+      <div class="history-header">
+        <div>
+          <div class="micro-label">ACCESS PERMISSIONS</div>
+          <h2>Aplikasi TV</h2>
+          <p class="subtitle">Pilih aplikasi yang diizinkan untuk dibuka pelanggan</p>
+        </div>
+        <div class="header-actions">
+          <button id="btnRefreshApps" class="btn-icon" title="Perbarui Data" aria-label="Refresh">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="appsListContainer" class="rental-list">
+        <div class="empty-state">Memuat daftar aplikasi...</div>
+      </div>
+    </section>
+
+    <!-- 4. History / Financial Recap View -->
+    <section id="historySection" class="card history-section hidden">
+      <div class="history-header">
+        <div>
+          <div class="micro-label">FINANCIAL RECAP & AUDIT</div>
+          <h2>Rekap & Riwayat</h2>
+          <p class="subtitle">Laporan omset rental & arsip sesi ruangan ini</p>
+        </div>
+        <div class="header-actions">
+          <button id="btnRefreshHistory" class="btn-icon" title="Perbarui Data" aria-label="Refresh">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          </button>
+          <button id="btnClearHistory" class="btn-icon text-danger" title="Hapus Riwayat" aria-label="Clear">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter Time Selector Bar -->
+      <div class="filter-bar" id="historyFilterBar">
+        <button type="button" class="filter-btn active" data-filter="today">Hari Ini</button>
+        <button type="button" class="filter-btn" data-filter="week">7 Hari</button>
+        <button type="button" class="filter-btn" data-filter="month">Bulan Ini</button>
+        <button type="button" class="filter-btn" data-filter="all">Semua</button>
+      </div>
+
+      <!-- Financial Recap Highlight Card -->
+      <div class="recap-highlight-card">
+        <div class="recap-top-row">
+          <span class="micro-label">TOTAL PENDAPATAN</span>
+          <span class="rate-tag" id="rateDisplayTag">Tarif: Rp 50.000 / Jam</span>
+        </div>
+        <div class="revenue-big" id="statTotalRevenue">Rp 0</div>
+        
+        <div class="recap-grid">
+          <div class="recap-substat">
+            <span class="micro-label-muted">DURASI TERPAKAI</span>
+            <span class="recap-subval" id="statTotalHours">0 Jam</span>
+          </div>
+          <div class="recap-substat">
+            <span class="micro-label-muted">TOTAL TRANSAKSI</span>
+            <span class="recap-subval" id="statTotalSessions">0 Sesi</span>
+          </div>
+          <div class="recap-substat">
+            <span class="micro-label-muted">RATA-RATA / SESI</span>
+            <span class="recap-subval" id="statAvgDuration">0 Mnt</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rental Item Log Feed -->
+      <div id="rentalListContainer" class="rental-list">
+        <div class="empty-state">Memuat riwayat sesi...</div>
+      </div>
+    </section>
+
+    <!-- 5. Settings View (Pengaturan Ruangan & Mobile) -->
+    <section id="settingsSection" class="card history-section hidden">
+      <div class="history-header">
+        <div>
+          <div class="micro-label">SYSTEM CONFIGURATION</div>
+          <h2>Pengaturan Ruangan</h2>
+          <p class="subtitle">Kelola nama ruangan, tarif sewa, dan tampilan TV</p>
+        </div>
+        <div class="header-actions">
+          <button id="btnRefreshSettings" class="btn-icon" title="Perbarui Pengaturan" aria-label="Refresh">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="settingsAlert" class="settings-alert hidden"></div>
+
+      <!-- Settings Form -->
+      <div class="settings-form">
+        <!-- 1. Room Name -->
+        <div class="settings-group">
+          <div class="zone-label-row">
+            <span class="micro-label">NAMA RUANGAN</span>
+            <span class="micro-label-muted">DISPLAY TV</span>
+          </div>
+          <input type="text" id="settingRoomName" class="input-text" placeholder="Contoh: Ruang 1" autocomplete="off" />
+          <div class="quick-chips">
+            <button type="button" class="chip-btn" data-set-room="Ruang 1">Ruang 1</button>
+            <button type="button" class="chip-btn" data-set-room="Ruang 2">Ruang 2</button>
+            <button type="button" class="chip-btn" data-set-room="Ruang 3">Ruang 3</button>
+            <button type="button" class="chip-btn" data-set-room="VIP Deluxe">VIP Deluxe</button>
+          </div>
+        </div>
+
+        <!-- 2. Hourly Rate -->
+        <div class="settings-group">
+          <div class="zone-label-row">
+            <span class="micro-label">HARGA SEWA PER JAM (RP)</span>
+            <span class="micro-label-muted" id="previewRateFormatted">Rp 50.000 / Jam</span>
+          </div>
+          <input type="number" id="settingHourlyRate" class="input-text font-mono" placeholder="50000" step="5000" min="0" />
+          <div class="quick-chips">
+            <button type="button" class="chip-btn" data-set-rate="35000">35k</button>
+            <button type="button" class="chip-btn" data-set-rate="50000">50k</button>
+            <button type="button" class="chip-btn" data-set-rate="75000">75k</button>
+            <button type="button" class="chip-btn" data-set-rate="100000">100k</button>
+          </div>
+          <div class="settings-hint">Tarif ini menjadi acuan dasar perhitungan omset otomatis pada tab Rekap Pendapatan.</div>
+        </div>
+
+        <!-- 3. TV Overlay Corner -->
+        <div class="settings-group">
+          <div class="zone-label-row">
+            <span class="micro-label">POSISI OVERLAY TIMER TV</span>
+          </div>
+          <div class="grid grid-2" id="cornerSelector">
+            <button type="button" class="btn btn-option active" data-corner="TOP_RIGHT">Kanan Atas</button>
+            <button type="button" class="btn btn-option" data-corner="TOP_LEFT">Kiri Atas</button>
+            <button type="button" class="btn btn-option" data-corner="BOTTOM_RIGHT">Kanan Bawah</button>
+            <button type="button" class="btn btn-option" data-corner="BOTTOM_LEFT">Kiri Bawah</button>
+          </div>
+        </div>
+
+        <!-- 4. TV Overlay Size -->
+        <div class="settings-group">
+          <div class="zone-label-row">
+            <span class="micro-label">UKURAN OVERLAY TIMER TV</span>
+          </div>
+          <div class="grid grid-3" id="sizeSelector">
+            <button type="button" class="btn btn-option" data-size="SMALL">Kecil</button>
+            <button type="button" class="btn btn-option active" data-size="MEDIUM">Sedang</button>
+            <button type="button" class="btn btn-option" data-size="LARGE">Besar</button>
+          </div>
+        </div>
+
+        <!-- 5. Standby Background / Attract Mode -->
+        <div class="settings-group">
+          <div class="zone-label-row">
+            <span class="micro-label">LATAR BELAKANG LAYAR SIAP</span>
+            <span class="micro-label-muted">STANDBY / ATTRACT</span>
+          </div>
+          <div class="grid grid-3" id="bgModeSelector">
+            <button type="button" class="btn btn-option active" data-bg-mode="NONE">Polos</button>
+            <button type="button" class="btn btn-option" data-bg-mode="IMAGE">Foto Promo</button>
+            <button type="button" class="btn btn-option" data-bg-mode="VIDEO">Video MP4</button>
+          </div>
+
+          <!-- Sub-panel: Foto Promo -->
+          <div id="panelBgImage" class="sub-config-panel hidden">
+            <div class="bg-preview-box" id="bgPreviewBox">
+              <img id="bgImgElement" src="" alt="Preview Background" class="hidden" />
+              <div id="bgEmptyPlaceholder" class="empty-placeholder">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <span>Belum ada foto latar</span>
+              </div>
+            </div>
+            <input type="file" id="bgFileInput" accept="image/*" class="hidden" />
+            <div class="grid grid-2">
+              <button type="button" id="btnPickBgFile" class="btn btn-secondary">Pilih Foto</button>
+              <button type="button" id="btnDeleteBgImage" class="btn btn-danger">Hapus Foto</button>
+            </div>
+            <div class="settings-hint">Rekomendasi rasio 16:9 (1920×1080). Gambar otomatis diberi efek transparan gelap di TV.</div>
+          </div>
+
+          <!-- Sub-panel: Video MP4 Promo -->
+          <div id="panelBgVideo" class="sub-config-panel hidden">
+            <div class="bg-preview-box" id="bgVideoPreviewBox">
+              <video id="bgVideoElement" src="" class="hidden" controls muted playsinline></video>
+              <div id="bgVideoEmptyPlaceholder" class="empty-placeholder">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>
+                <span>Belum ada video latar</span>
+              </div>
+            </div>
+            <input type="file" id="bgVideoFileInput" accept="video/mp4,video/*" class="hidden" />
+            <div class="grid grid-2">
+              <button type="button" id="btnPickBgVideo" class="btn btn-secondary">Pilih Video MP4</button>
+              <button type="button" id="btnDeleteBgVideo" class="btn btn-danger">Hapus Video</button>
+            </div>
+            <div id="videoUploadProgress" class="upload-progress-wrap hidden">
+              <div class="progress-bar-container">
+                <div class="progress-bar" id="videoProgressBar" style="width: 0%;"></div>
+              </div>
+              <span class="micro-label-muted" id="videoProgressText">Mengunggah 0%</span>
+            </div>
+            <div class="hardware-switch-row">
+              <span class="micro-label">BISU AUDIO (MUTE)</span>
+              <label class="hardware-switch">
+                <input type="checkbox" id="settingVideoMute" checked>
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+            <div class="settings-hint">Format MP4 (H.264), maksimal 50MB. Video berputar otomatis (looping) di TV saat status SIAP.</div>
+          </div>
+        </div>
+
+        <!-- 6. Change PIN -->
+        <div class="settings-group">
+          <div class="zone-label-row">
+            <span class="micro-label">GANTI PIN ADMINISTRATOR</span>
+            <span class="micro-label-muted">4–6 DIGIT</span>
+          </div>
+          <div class="grid grid-2">
+            <input type="password" id="settingNewPin" class="input-text font-mono" maxlength="6" inputmode="numeric" placeholder="PIN Baru" autocomplete="off" />
+            <input type="password" id="settingConfirmPin" class="input-text font-mono" maxlength="6" inputmode="numeric" placeholder="Ulangi PIN" autocomplete="off" />
+          </div>
+          <div class="settings-hint">Kosongkan kolom PIN jika tidak bermaksud mengubah PIN keamanan ruangan.</div>
+        </div>
+
+        <!-- Save Button -->
+        <button type="button" id="btnSaveSettings" class="btn btn-primary btn-block">Simpan Pengaturan</button>
+      </div>
+    </section>
+
+    <!-- Subtle Hardware Footer Tag & Developer Credit -->
+    <footer class="app-footer">
+      <div class="footer-meta">
+        <span>TV KARAOKE OS • HARDWARE CONSOLE REV 1.0</span>
+      </div>
+      <div class="footer-credit">
+        Dibuat oleh <a href="https://akmalfadli.github.io" target="_blank" rel="noopener noreferrer" class="credit-link">Akmal Fadli</a>
+        <div class="footer-cta">
+          Solusi Custom Launcher & Kiosk System: <a href="https://akmalfadli.github.io" target="_blank" rel="noopener noreferrer" class="credit-link-cta">akmalfadli.github.io</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Custom Confirmation Modal Dialog -->
+  <div id="confirmModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-icon-wrap" id="modalIconWrap">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <div class="modal-title-group">
+          <div class="micro-label" id="modalMicroLabel">ACTION CONFIRMATION</div>
+          <h3 id="modalTitle">Hentikan Sesi Timer?</h3>
+        </div>
+      </div>
+      <p class="modal-body" id="modalMessage">
+        Sesi timer yang sedang berjalan akan diakhiri dan tampilan TV akan dikembalikan ke status SIAP.
+      </p>
+      <div class="modal-actions grid grid-2">
+        <button type="button" id="btnModalCancel" class="btn btn-secondary">Batal</button>
+        <button type="button" id="btnModalConfirm" class="btn btn-danger">Hentikan Sesi</button>
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>

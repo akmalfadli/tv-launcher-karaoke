@@ -5,6 +5,7 @@ Aplikasi Launcher khusus Android TV / Google TV (**Sony Bravia XR X90 series 55"
 ---
 
 ## 📋 Daftar Isi
+- [Galeri Desain & Referensi UI](#-galeri-desain--referensi-ui)
 - [Fitur Utama](#-fitur-utama)
 - [Arsitektur Teknis](#-arsitektur-teknis)
 - [Persyaratan Sistem](#-persyaratan-sistem)
@@ -12,21 +13,69 @@ Aplikasi Launcher khusus Android TV / Google TV (**Sony Bravia XR X90 series 55"
 - [Panduan Penggunaan Operator](#-panduan-penggunaan-operator)
 - [Pengembangan & Pengujian](#-pengembangan--pengujian)
 - [Perintah Pemulihan (Recovery)](#-perintah-pemulihan-recovery)
+- [Pengembang & Konsultasi Profesional (CTA)](#-pengembang--konsultasi-profesional-cta)
+
+---
+
+## 🎨 Galeri Desain & Referensi UI
+
+### 1. Referensi Desain Konseptual (Gemini AI)
+Desain antarmuka dirancang dengan gaya *tactile luxury minimalism*, estetika instrumen studio audio, monokromatik gelap, dan micro-label teknis tanpa emoji.
+
+| Mobile Operator Console (Gemini Design) | TV Launcher & Display Specs (Gemini Design) |
+| :---: | :---: |
+| ![Referensi Desain Mobile](docs/images/design-reference-mobile-admin.jpg) | ![Referensi Desain TV Launcher](docs/images/design-reference-tv-launcher.jpg) |
+
+### 2. Implementasi Nyata pada Layar Android TV
+Tampilan launcher aktual yang berjalan langsung di TV (Sony Bravia XR X90 Series):
+
+| Mode Siap: Video MP4 Looping Offline | Mode Sesi Aktif: Countdown Bersih | Mode Waktu Habis: Layar Penuh Pelanggan |
+| :---: | :---: | :---: |
+| ![TV Standby Video](docs/images/tv-standby-video.png) | ![TV Running Session](docs/images/tv-running-session.png) | ![TV Times Up Overlay](docs/images/tv-times-up-overlay.png) |
+
+### 3. Implementasi Nyata pada Antarmuka Mobile Admin
+Tampilan konsol web remote operator pada browser handphone:
+
+| Menu Pengaturan TV Launcher (Layar TV) | Pengaturan Background Video & Mute (HP) |
+| :---: | :---: |
+| ![TV Settings Screen](docs/images/tv-settings-screen.png) | ![Mobile Settings Video](docs/images/mobile-settings-video.png) |
 
 ---
 
 ## 🚀 Fitur Utama
 
-- **Timer Overlay Akurat**: Menampilkan sisa waktu sewa dalam bentuk *pill* di sudut layar di atas aplikasi karaoke (YouTube). Dihitung menggunakan monotonic clock (`SystemClock.elapsedRealtime()`) sehingga tidak terpengaruh jika jam sistem TV diubah atau disinkronisasi NTP.
-- **Layar Penuh "WAKTU HABIS"**: Ketika timer mencapai 00:00, layar TV otomatis dilapisi overlay merah semi-transparan dengan peringatan waktu habis.
-- **Server Lokal Tersemat (Embedded Ktor)**: TV menjalankan server HTTP dan WebSocket lokal pada port `8080`. Seluruh komunikasi berjalan offline dalam jaringan lokal (tidak memerlukan koneksi internet).
-- **Remote Web Operator (Mobile-First)**: Operator dapat mengontrol timer dari browser HP (mulai 30/60/90/120 menit, jeda, lanjutkan, tambah/kurang waktu, dan perpanjang sewa).
-- **Setup Wizard Interaktif**: Konfigurasi nama ruangan (misal: "Ruang 1"), pembuatan PIN admin, pengecekan izin sistem, serta tampilan QR code langsung pada layar TV saat pertama kali dinyalakan.
+- **Timer Overlay Monotonik Presisi**: Menampilkan sisa waktu sewa dalam bentuk *pill* di sudut layar di atas aplikasi karaoke apa pun (YouTube / SmartTube). Dihitung menggunakan monotonic clock (`SystemClock.elapsedRealtime()`) sehingga tidak terpengaruh jika jam sistem TV diubah atau disinkronisasi NTP.
+- **Layar Penuh "WAKTU HABIS"**: Ketika timer mencapai 00:00, layar TV otomatis dilapisi overlay merah semi-transparan dengan peringatan waktu habis dan tombol navigasi remote ditahan.
+- **Latar Layar Siap Dinamis (Video MP4 & Foto Promo Offline)**:
+  - Pilihan mode latar: **Polos**, **Foto Promo** (JPEG/PNG/WebP), dan **Video MP4 Looping**.
+  - Mengunggah file video MP4 (hingga 50MB) langsung dari HP operator dan disimpan lokal di internal storage TV.
+  - Video berputar secara otomatis dan *looping* hanya saat TV berstatus **SIAP (`IDLE`)** dengan lapisan *gradient scrim* gelap agar teks tetap tajam.
+  - Dilengkapi sakelar **Bisu Audio (Mute)**.
+  - Video otomatis dihentikan dan melepaskan hardware resource (*hardware-accelerated playback release*) saat sesi dimulai, menjamin nol beban CPU/GPU saat pelanggan bernyanyi.
+- **Konfigurasi Ruangan & Finansial Dinamis**:
+  - Pengaturan **Tarif Sewa per Jam** (*Hourly Rate*) langsung dari tab Pengaturan di HP dengan chip pintasan (35k, 50k, 75k, 100k) serta live preview kalkulasi.
+  - Pengubahan **Nama Ruangan** (misal: "Ruang VIP 1", "Room 03") dengan sinkronisasi instan ke header TV dan HP.
+  - Penyesuaian **Posisi Overlay Timer TV** (Kanan Atas, Kiri Atas, Kanan Bawah, Kiri Bawah).
+  - Penyesuaian **Ukuran Overlay Timer TV** (Kecil, Sedang, Besar).
+  - Penggantian **PIN Keamanan Administrator** (4–6 digit).
+  - Tombol pintasan **"Buka Pengaturan TV"** di layar launcher TV untuk membuka pengaturan sistem Android TV secara langsung.
+- **Manajemen Akses Aplikasi TV (*Allowed Apps Whitelist*)**:
+  - Tab "Aplikasi TV" di HP operator membaca seluruh aplikasi yang terpasang di Android TV secara dinamis.
+  - Tombol sakelar untuk mengizinkan atau memblokir aplikasi agar hanya aplikasi karaoke (misal SmartTube / YouTube) yang dapat dibuka pelanggan.
+- **Rekap Finansial & Audit Riwayat Transaksi**:
+  - Filter laporan fleksibel: **Hari Ini** (*Today*), **7 Hari** (*Week*), **Bulan Ini** (*Month*), dan **Semua** (*All*).
+  - Ringkasan metrik otomatis: **Total Sesi Sewa**, **Total Jam Pemakaian**, **Rata-rata Durasi**, dan **Total Estimasi Omset Pendapatan (Rp)** yang dihitung otomatis berdasarkan tarif per jam yang aktif.
+  - Pencatatan nama pelanggan/tamu pada setiap sesi sewa.
+  - Tombol **Hapus Riwayat** dilengkapi modal konfirmasi keamanan.
+- **Server Lokal Tersemat (Embedded Ktor CIO)**: TV menjalankan server HTTP dan WebSocket lokal pada port `8080`. Seluruh komunikasi berjalan 100% offline dalam jaringan WiFi lokal tanpa memerlukan sambungan internet.
+- **Desain Tactile Minimalism Tanpa Emoji (REV 1.0)**: Antarmuka operator dirancang khusus mengusung estetika *hardware console*, indikator status monokromatik, font monospace teknis, dan kredit resmi *TV KARAOKE OS • HARDWARE CONSOLE REV 1.0 Dibuat oleh Akmal Fadli*.
 - **Keamanan & Proteksi Brute-Force**:
   - Halaman admin dan pengaturan TV dilindungi PIN dengan hash PBKDF2-HMAC-SHA256 (100.000 iterasi).
   - Setiap perintah membawa token sesi kriptografis (masa aktif 12 jam).
   - Pembatasan percobaan login (penguncian 5 menit setelah 5 kali salah memasukkan PIN).
   - Peringatan sistem di TV dan HP jika debugging ADB masih dibiarkan aktif.
+- **Dukungan Build Otomatis (Release & Debug)**:
+  - Skrip `install-tv.sh` mendukung instalasi otomatis versi `release` (teroptimasi dengan sertifikat penandatanganan) maupun versi `debug`.
 - **Tahan Restart TV**: Berjalan sebagai Foreground Service tipe `specialUse` dan otomatis pulih saat TV dinyalakan (`BOOT_COMPLETED`).
 
 ---
@@ -90,7 +139,14 @@ Dari terminal di laptop/PC Anda, jalankan:
 
 ```bash
 cd /path/to/tv-launcher-karaoke
+
+# Menginstall versi RELEASE (Default & direkomendasikan untuk operasional)
 ./scripts/install-tv.sh <IP_TV>
+# atau secara eksplisit:
+./scripts/install-tv.sh <IP_TV> release
+
+# Menginstall versi DEBUG (Untuk kebutuhan pengembangan/debugging)
+./scripts/install-tv.sh <IP_TV> debug
 ```
 *Contoh:*
 ```bash
@@ -119,12 +175,33 @@ Skrip ini akan secara otomatis:
 1. Hubungkan HP operator ke WiFi yang sama dengan TV.
 2. Buka browser dan akses alamat IP TV (misal: `http://192.168.1.105:8080`) atau pindai QR Code yang ada di pojok layar TV.
 3. Masukkan PIN Admin yang telah dibuat saat setup.
-4. **Kontrol yang Tersedia**:
-   - **Mulai Sesi**: Pilih preset cepat (30m, 60m, 90m, 120m).
-   - **Jeda / Lanjut**: Menjeda atau melanjutkan hitungan timer.
-   - **Tambah / Kurang Waktu**: Tombol +5m, +10m, atau -5m.
-   - **Perpanjang Waktu**: Saat waktu habis, tombol perpanjang +30m dan +60m akan muncul secara otomatis.
-   - **Hentikan**: Mengakhiri sesi sewa ruangan.
+4. **Navigasi Tab di HP**:
+   - **Tab Kontrol Timer**:
+     - Masukkan **Nama Pelanggan** (misal: "Budi", "Meja 2").
+     - Pilih durasi sewa instan (30m, 60m, 90m, 120m).
+     - Nama pelanggan yang sedang aktif akan muncul di atas display timer (dapat diklik langsung untuk mengubah nama jika ada koreksi).
+     - Gunakan tombol kontrol bergaya hardware: **Jeda / Lanjut**, **Penyesuaian Waktu (+5m / +10m / -5m)**, atau **Hentikan Sesi** (dengan konfirmasi).
+     - Saat waktu habis, kontrol perpanjangan sewa (+30m / +60m) otomatis muncul.
+   - **Tab Aplikasi TV**:
+     - Menampilkan daftar seluruh aplikasi yang terpasang di Android TV secara dinamis.
+     - Aktifkan atau nonaktifkan sakelar (*switch*) untuk mengizinkan aplikasi dibuka pelanggan di launcher.
+     - Aplikasi terizinkan otomatis muncul sebagai kartu pintasan di beranda launcher TV.
+   - **Tab Rekap & Riwayat**:
+     - **Filter Laporan**: Tombol filter instan (Hari Ini, 7 Hari, Bulan Ini, Semua).
+     - **Indikator Tarif Acuan**: Menampilkan tarif sewa per jam yang sedang berlaku.
+     - **Ringkasan Finansial**: Menampilkan **Total Omset Pendapatan (Rp)**, **Total Sesi**, **Total Jam**, dan **Rata-rata Durasi**.
+     - **Daftar Riwayat Rinci**: Nama Pelanggan, Tag Status (`Sedang Aktif`, `Selesai`, `Dihentikan`), Jam Mulai & Jam Selesai, serta rincian durasi perpanjangan.
+     - **Tombol Bersihkan Riwayat**: Menghapus arsip riwayat sewa dengan konfirmasi keamanan.
+   - **Tab Pengaturan**:
+     - **Nama Ruangan**: Mengganti nama ruangan dengan live preview & chip cepat.
+     - **Harga Sewa per Jam (Rp)**: Mengatur tarif dasar sewa untuk kalkulasi omset.
+     - **Posisi Overlay Timer**: Memilih sudut layar TV (Kanan Atas, Kiri Atas, Kanan Bawah, Kiri Bawah).
+     - **Ukuran Overlay**: Mengatur skala ukuran tampilan timer di TV (Kecil, Sedang, Besar).
+     - **Latar Belakang Layar Siap**:
+       - Pilihan mode: **Polos**, **Foto Promo** (JPEG/PNG/WebP), atau **Video MP4 Looping**.
+       - Tombol upload video MP4 (maksimal 50MB) dengan live progress bar & pemutar video preview.
+       - Sakelar **Bisu Audio (Mute)**.
+     - **Ganti PIN Administrator**: Mengganti 4–6 digit PIN keamanan.
 
 ---
 
@@ -160,6 +237,22 @@ Proyek ini dilengkapi dengan automated unit tests untuk logika bisnis inti (akur
 ./gradlew testDebugUnitTest
 ```
 
+### Menjalankan di Emulator Android TV
+Jika Anda tidak sedang berada di dekat TV fisik, Anda dapat menguji seluruh fungsi launcher dan web remote langsung di **Emulator Android TV**:
+```bash
+./scripts/run-emulator.sh
+```
+Skrip ini akan secara otomatis:
+1. Mendeteksi AVD Android TV (misal: `Television_1080p`).
+2. Mengompilasi dan memasang APK ke emulator.
+3. Mengaktifkan izin `SYSTEM_ALERT_WINDOW` (overlay) dan whitelist penghemat baterai.
+4. Meneruskan port server TV (`adb forward tcp:8080 tcp:8080`).
+5. Membuka aplikasi di emulator TV.
+
+Setelah aplikasi berjalan di emulator:
+- **Navigasi TV**: Gunakan tombol panah keyboard (D-Pad), `Enter` (Pilih), dan `Esc/Backspace` (Kembali).
+- **Web Remote Operator**: Buka browser di laptop Anda di `http://localhost:8080` atau dari HP Anda di `http://<IP_LAPTOP>:8080`.
+
 ### Mengompilasi APK Debug
 ```bash
 ./gradlew assembleDebug
@@ -181,3 +274,32 @@ adb shell pm enable com.google.android.apps.tv.launcherx
 # (Opsional) Menghapus aplikasi karaoke launcher
 adb shell pm uninstall id.karaoke.timerlauncher
 ```
+
+---
+
+## 👨‍💻 Pengembang & Konsultasi Profesional (CTA)
+
+Projek **Launcher Android TV Timer Karaoke** ini dirancang dan dibangun secara profesional oleh:
+
+### **Akmal Fadli**
+*Full-Stack Engineer, Android & Embedded Solutions Specialist*
+
+- 🌐 **Portfolio & Kontak**: [akmalfadli.github.io](https://akmalfadli.github.io)
+- 🐙 **GitHub**: [github.com/akmalfadli](https://github.com/akmalfadli)
+
+---
+
+### 🚀 Butuh Solusi Custom TV Launcher atau Sistem Serupa?
+
+Apakah Anda mengelola bisnis karaoke, rental PlayStation, hotel, gym, atau ruang publik komersial yang membutuhkan integrasi sistem Android TV kustom?
+
+Kami menerima layanan perancangan dan pengerjaan proyek profesional:
+- 📺 **Custom Android TV / Google TV Launcher & Kiosk Systems**: Tampilan custom brand, penguncian sistem dari tangan pelanggan, dan navigasi ramah remote TV.
+- ⏱️ **Billing & Timer Overlays**: Sistem penghitung sewa akurat dengan overlay floating yang berjalan di atas aplikasi pihak ketiga (seperti YouTube, Spotify, atau pemutar karaoke).
+- 📱 **Mobile Web Console & Local Control**: Kontrol nirkabel berbasis browser tanpa perlu internet (100% offline di jaringan lokal), responsif dan mudah digunakan staf operasional.
+- 🔒 **Device Hardening & ADB Security**: Proteksi tamper-proof, pencegahan bypass pengguna, dan audit transaksi rental.
+- 📊 **Financial Reporting & Automation**: Rekap pendapatan otomatis, kalkulasi tarif sewa, dan integrasi sistem kasir/POS.
+
+Tertarik membangun sistem kustom untuk bisnis Anda?  
+Kunjungi portofolio dan hubungi langsung melalui:  
+👉 **[akmalfadli.github.io](https://akmalfadli.github.io)**

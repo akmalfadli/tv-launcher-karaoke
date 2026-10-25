@@ -139,6 +139,37 @@ fun SettingsScreen(onBack: () -> Unit) {
                     }
                 }
 
+                // Aplikasi yang Diizinkan di TV
+                val installedApps = remember(settings.allowedPackages) {
+                    app.appDiscoveryManager.getInstalledApps(settings.allowedPackages)
+                }
+
+                Text("Aplikasi yang Diizinkan di TV", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = TextMuted)
+                Text(
+                    "Pilih aplikasi yang dapat dibuka oleh pelanggan pada layar beranda:",
+                    fontSize = 11.sp,
+                    color = TextMuted,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+
+                androidx.compose.foundation.lazy.LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(bottom = 14.dp)
+                ) {
+                    items(installedApps.size) { idx ->
+                        val item = installedApps[idx]
+                        FocusableButton(
+                            text = "${if (item.isAllowed) "✓ " else "+ "}${item.appName}",
+                            isPrimary = item.isAllowed,
+                            onClick = {
+                                scope.launch {
+                                    app.settingsRepository.toggleAllowedPackage(item.packageName, !item.isAllowed)
+                                }
+                            }
+                        )
+                    }
+                }
+
                 // Status Sistem
                 Text("Status Sistem & Keamanan", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = TextMuted)
                 Column(
@@ -177,11 +208,27 @@ fun SettingsScreen(onBack: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                FocusableButton(
-                    text = "Kembali ke Beranda",
-                    isPrimary = true,
-                    onClick = onBack
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    FocusableButton(
+                        text = "Kembali ke Beranda",
+                        isPrimary = true,
+                        onClick = onBack
+                    )
+                    FocusableButton(
+                        text = "Buka Pengaturan TV",
+                        isPrimary = false,
+                        onClick = {
+                            runCatching {
+                                val intent = android.content.Intent(android.provider.Settings.ACTION_SETTINGS).apply {
+                                    flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                                }
+                                context.startActivity(intent)
+                            }
+                        }
+                    )
+                }
             }
 
             // Right Column: Admin QR

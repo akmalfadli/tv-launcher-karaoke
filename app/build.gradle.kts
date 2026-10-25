@@ -22,6 +22,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -79,6 +80,7 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
 
     implementation(libs.zxing.core)
+    implementation("com.pierfrancescosoffritti.androidyoutubeplayer:core:12.1.1")
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

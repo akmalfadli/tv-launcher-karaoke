@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,7 +38,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -84,20 +88,30 @@ fun SetupScreen(onSetupComplete: () -> Unit) {
         }
     }
 
+    val deviceModel = remember {
+        val manufacturer = android.os.Build.MANUFACTURER.replaceFirstChar { it.uppercase() }
+        val model = android.os.Build.MODEL
+        if (model.startsWith(manufacturer, ignoreCase = true)) {
+            model
+        } else {
+            "$manufacturer $model"
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(BgDark)
-            .padding(40.dp),
+            .padding(horizontal = 24.dp, vertical = 16.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
             modifier = Modifier
-                .width(820.dp)
-                .clip(RoundedCornerShape(24.dp))
+                .width(740.dp)
+                .clip(RoundedCornerShape(20.dp))
                 .background(SurfaceDark)
-                .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(24.dp))
-                .padding(32.dp),
+                .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(20.dp))
+                .padding(horizontal = 28.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Header Progress
@@ -108,88 +122,88 @@ fun SetupScreen(onSetupComplete: () -> Unit) {
             ) {
                 Text(
                     text = "Konfigurasi Perangkat (Langkah $step dari 4)",
-                    fontSize = 20.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
                 Text(
-                    text = "Sony Bravia XR X90",
-                    fontSize = 14.sp,
+                    text = deviceModel,
+                    fontSize = 13.sp,
                     color = PrimaryIndigo,
                     fontWeight = FontWeight.SemiBold
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             when (step) {
                 1 -> {
                     // Step 1: Izin Overlay & Optimasi Baterai
                     Text(
                         text = "Izin Sistem & Optimasi Baterai",
-                        fontSize = 24.sp,
+                        fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                     Text(
                         text = "Aplikasi memerlukan izin overlay agar timer dapat tampil di atas YouTube.",
-                        fontSize = 14.sp,
+                        fontSize = 13.sp,
                         color = TextMuted,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 8.dp, bottom = 20.dp)
+                        modifier = Modifier.padding(top = 4.dp, bottom = 14.dp)
                     )
 
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(14.dp))
                             .background(Color(0x11FFFFFF))
-                            .padding(16.dp),
+                            .padding(14.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text("Izin Tampil di Atas Aplikasi Lain", fontWeight = FontWeight.Bold, color = TextPrimary)
+                            Text("Izin Tampil di Atas Aplikasi Lain", fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 14.sp)
                             Text(
                                 if (hasOverlay) "Status: Diizinkan (OK)" else "Status: Belum diizinkan. Jalankan skrip ADB.",
                                 color = if (hasOverlay) SuccessGreen else DangerRed,
-                                fontSize = 13.sp
+                                fontSize = 12.sp
                             )
                         }
                         if (!hasOverlay) {
                             Text(
                                 "adb shell appops set id.karaoke.timerlauncher SYSTEM_ALERT_WINDOW allow",
                                 fontFamily = FontFamily.Monospace,
-                                fontSize = 11.sp,
+                                fontSize = 10.sp,
                                 color = AccentAmber
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(14.dp))
                             .background(Color(0x11FFFFFF))
-                            .padding(16.dp),
+                            .padding(14.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text("Optimasi Baterai Latar Belakang", fontWeight = FontWeight.Bold, color = TextPrimary)
+                            Text("Optimasi Baterai Latar Belakang", fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 14.sp)
                             Text(
                                 if (isBatteryIgnored) "Status: Dikecualikan (Aman)" else "Status: Aktif",
                                 color = if (isBatteryIgnored) SuccessGreen else AccentAmber,
-                                fontSize = 13.sp
+                                fontSize = 12.sp
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(18.dp))
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                         FocusableButton(
                             text = "Lanjutkan",
                             isPrimary = true,
@@ -202,24 +216,24 @@ fun SetupScreen(onSetupComplete: () -> Unit) {
                     // Step 2: Nama Ruangan
                     Text(
                         text = "Pilih Nama Ruangan",
-                        fontSize = 24.sp,
+                        fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                     Text(
                         text = "Nama ini akan ditampilkan pada layar TV dan halaman kontrol operator.",
-                        fontSize = 14.sp,
+                        fontSize = 13.sp,
                         color = TextMuted,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 8.dp, bottom = 20.dp)
+                        modifier = Modifier.padding(top = 4.dp, bottom = 14.dp)
                     )
 
-                    val presets = listOf("Ruang 1", "Ruang 2", "Ruang 3", "Ruang 4", "Ruang VIP 1", "Ruang VIP 2")
+                    // Quick preset buttons: Ruang 1, Ruang 2, Ruang 3
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.padding(bottom = 24.dp)
+                        modifier = Modifier.padding(bottom = 12.dp)
                     ) {
-                        for (name in presets) {
+                        for (name in listOf("Ruang 1", "Ruang 2", "Ruang 3")) {
                             val isSelected = roomName == name
                             FocusableButton(
                                 text = name,
@@ -229,9 +243,57 @@ fun SetupScreen(onSetupComplete: () -> Unit) {
                         }
                     }
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text(
+                        text = "Atau ketik nama ruangan manual:",
+                        fontSize = 12.sp,
+                        color = TextMuted,
+                        modifier = Modifier.padding(bottom = 6.dp)
+                    )
+
+                    OutlinedTextField(
+                        value = roomName,
+                        onValueChange = { roomName = it },
+                        singleLine = true,
+                        placeholder = {
+                            Text(
+                                text = "Ketik nama ruangan (contoh: Ruang VIP 1)...",
+                                color = TextMuted,
+                                fontSize = 13.sp
+                            )
+                        },
+                        textStyle = TextStyle(
+                            color = Color.White,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold
+                        ),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = AccentAmber,
+                            unfocusedBorderColor = Color(0x33FFFFFF),
+                            focusedContainerColor = Color(0x33FFFFFF),
+                            unfocusedContainerColor = Color(0x1AFFFFFF),
+                            cursorColor = AccentAmber,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .width(420.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                         FocusableButton("Kembali", isPrimary = false, onClick = { step = 1 })
-                        FocusableButton("Lanjutkan", isPrimary = true, onClick = { step = 3 })
+                        FocusableButton(
+                            text = "Lanjutkan",
+                            isPrimary = true,
+                            onClick = {
+                                if (roomName.isBlank()) {
+                                    roomName = "Ruang 1"
+                                }
+                                step = 3
+                            }
+                        )
                     }
                 }
 
@@ -239,37 +301,37 @@ fun SetupScreen(onSetupComplete: () -> Unit) {
                     // Step 3: Buat PIN Admin
                     Text(
                         text = "Buat PIN Admin",
-                        fontSize = 24.sp,
+                        fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                     Text(
                         text = "PIN 4 digit ini digunakan operator untuk login dari HP.",
-                        fontSize = 14.sp,
+                        fontSize = 13.sp,
                         color = TextMuted,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 6.dp, bottom = 12.dp)
+                        modifier = Modifier.padding(top = 2.dp, bottom = 8.dp)
                     )
 
                     // Dots display
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        modifier = Modifier.padding(bottom = 12.dp)
+                        modifier = Modifier.padding(bottom = 8.dp)
                     ) {
                         for (i in 0 until 4) {
                             val isFilled = i < pinValue.length
                             Box(
                                 modifier = Modifier
-                                    .size(18.dp)
-                                    .clip(RoundedCornerShape(9.dp))
+                                    .size(16.dp)
+                                    .clip(RoundedCornerShape(8.dp))
                                     .background(if (isFilled) PrimaryIndigo else Color(0x22FFFFFF))
-                                    .border(1.dp, if (isFilled) PrimaryIndigo else Color(0x44FFFFFF), RoundedCornerShape(9.dp))
+                                    .border(1.dp, if (isFilled) PrimaryIndigo else Color(0x44FFFFFF), RoundedCornerShape(8.dp))
                             )
                         }
                     }
 
                     if (pinError != null) {
-                        Text(pinError!!, color = DangerRed, fontSize = 13.sp, modifier = Modifier.padding(bottom = 8.dp))
+                        Text(pinError!!, color = DangerRed, fontSize = 12.sp, modifier = Modifier.padding(bottom = 4.dp))
                     }
 
                     // Keypad
@@ -285,6 +347,7 @@ fun SetupScreen(onSetupComplete: () -> Unit) {
                             for (key in row) {
                                 DpadKeyButton(
                                     text = key,
+                                    modifier = Modifier.size(68.dp, 38.dp),
                                     onClick = {
                                         when (key) {
                                             "C" -> pinValue = ""
@@ -298,9 +361,9 @@ fun SetupScreen(onSetupComplete: () -> Unit) {
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                         FocusableButton("Kembali", isPrimary = false, onClick = { step = 2 })
                         FocusableButton(
                             text = "Simpan & Lanjut",
@@ -326,48 +389,49 @@ fun SetupScreen(onSetupComplete: () -> Unit) {
                     // Step 4: Setup Selesai & Admin QR Code
                     Text(
                         text = "Setup Selesai!",
-                        fontSize = 26.sp,
+                        fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = SuccessGreen
                     )
                     Text(
                         text = "Pindai QR code ini dengan HP operator yang terhubung ke WiFi yang sama.",
-                        fontSize = 14.sp,
+                        fontSize = 13.sp,
                         color = TextMuted,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
+                        modifier = Modifier.padding(top = 2.dp, bottom = 10.dp)
                     )
 
                     val adminUrl = "http://$ipAddress:8080"
                     val qrBitmap = remember(adminUrl) {
-                        QrCodeGenerator.generateQrBitmap(adminUrl, 360)
+                        QrCodeGenerator.generateQrBitmap(adminUrl, 320)
                     }
 
-                    Row(
+                    Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
+                            .size(136.dp)
+                            .clip(RoundedCornerShape(12.dp))
                             .background(Color.White)
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(6.dp),
+                        contentAlignment = Alignment.Center
                     ) {
                         Image(
                             bitmap = qrBitmap,
                             contentDescription = "Admin QR Code",
-                            modifier = Modifier.size(160.dp)
+                            modifier = Modifier.fillMaxSize()
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
                         text = "Alamat IP: $adminUrl",
                         fontFamily = FontFamily.Monospace,
-                        fontSize = 16.sp,
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = AccentAmber
                     )
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     FocusableButton(
                         text = "Selesai & Buka Launcher",
@@ -389,6 +453,7 @@ fun SetupScreen(onSetupComplete: () -> Unit) {
 fun FocusableButton(
     text: String,
     isPrimary: Boolean,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -397,34 +462,36 @@ fun FocusableButton(
     val bg = when {
         isFocused -> Color.White
         isPrimary -> PrimaryIndigo
-        else -> Color(0x22FFFFFF)
+        else -> Color(0x33FFFFFF)
     }
 
     val textCol = when {
         isFocused -> Color.Black
         isPrimary -> Color.White
-        else -> TextPrimary
+        else -> Color.White
     }
 
     Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
+        modifier = modifier
+            .height(42.dp)
+            .clip(RoundedCornerShape(10.dp))
             .background(bg)
             .border(
                 width = if (isFocused) 2.dp else 1.dp,
-                color = if (isFocused) AccentAmber else Color.Transparent,
-                shape = RoundedCornerShape(12.dp)
+                color = if (isFocused) AccentAmber else Color(0x22FFFFFF),
+                shape = RoundedCornerShape(10.dp)
             )
             .focusable(interactionSource = interactionSource)
             .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 12.dp),
+            .padding(horizontal = 22.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            fontSize = 15.sp,
+            fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
-            color = textCol
+            color = textCol,
+            maxLines = 1
         )
     }
 }

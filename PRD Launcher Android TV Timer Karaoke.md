@@ -1,6 +1,6 @@
 # PRD: Launcher Android TV Timer Karaoke
 
-Oct 24, 2026 · @Akmal Fadli · Revisi 1.4 (lihat Riwayat revisi)
+Oct 24, 2026 · @Akmal Fadli · Revisi 1.5 (lihat Riwayat revisi)
 
 ## Ringkasan dan latar belakang
 
@@ -80,7 +80,7 @@ Setiap kebutuhan diberi prioritas: P0 wajib di MVP, P1 fase 2, P2 fase 3.
 | F11 | QR code kedua di TV yang mengarah ke halaman pelanggan (terpisah dari QR code admin di F18 dan F19) | P1 |
 | F12 | Aplikasi pendamping di HP admin yang menemukan semua TV otomatis lewat NSD, menampilkannya sebagai daftar ruangan tanpa mengetik IP, dan menampilkan notifikasi sistem untuk permintaan pelanggan dan event `timer_finished` | P1 |
 | F13 | Dashboard admin mengontrol banyak TV sekaligus | P1 |
-| F14 | Riwayat aksi (siapa, kapan, apa) | P1 |
+| F14 | Riwayat rental dan sesi (nama pelanggan, jam mulai, jam selesai, durasi awal, penambahan waktu, dan status sewa) dapat dilihat langsung dari HP operator | P0 |
 | F15 | Kirim perintah jeda ke aplikasi media saat waktu habis (opsional per ruangan); di Sony Bravia lewat Bravia IP Control (perintah tombol remote IRCC "Pause") ke `127.0.0.1` | P2 |
 | F16 | Matikan TV saat waktu habis; di Sony Bravia lewat Bravia IP Control (`setPowerStatus`) ke `127.0.0.1`, dengan HDMI-CEC sebagai cadangan | P2 |
 | F17 | Cadangan kendali dari remote TV bawaan (tombol OK dan tombol warna) | P2 |
@@ -297,3 +297,4 @@ Belum ada tanggal. Jadwal ditetapkan setelah jumlah ruangan dan model TV dikonfi
 | 1.2 | Oct 24, 2026 | Keputusan distribusi sideload; bagian baru Distribusi dan pemasangan (cara pasang ADB dan flashdisk, skrip ADB, pembaruan manual, keystore); risiko Play Protect, keystore hilang, dan ADB jaringan; pertanyaan terbuka diperbarui |
 | 1.3 | Oct 24, 2026 | Keputusan jaringan: satu WiFi lokal bersama untuk TV, HP admin, dan HP pelanggan; ADB wajib dimatikan setelah pemasangan; keamanan diperkuat (token di setiap endpoint admin, batas percobaan PIN per IP, masa berlaku token, WiFi berkata sandi); risiko dan pertanyaan terbuka diperbarui |
 | 1.4 | Oct 24, 2026 | Perangkat target Sony Bravia XR X90 series 55 inci (Google TV); bagian baru Perangkat target; penggantian launcher Google TV lewat ADB; `minSdk` 29; Bravia IP Control untuk F15 dan F16; risiko launcher Google TV dan akses menu Settings; pertanyaan terbuka diperbarui |
+| 1.5 | Oct 25, 2026 | Penambahan fitur Riwayat Rental dengan nama pelanggan, tanggal/jam mulai, durasi awal, perpanjangan, jam selesai, dan status sewa di HP operator (F14 dipindahkan ke P0/MVP) |

@@ -28,12 +28,32 @@ data class StatusDto(
     val serverElapsed: Long,
     val restoredAfterReboot: Boolean,
     val appVersion: String = "1.0.0",
-    val warnings: List<String> = emptyList()
+    val warnings: List<String> = emptyList(),
+    val customerName: String? = null
 )
 
 @Serializable
 data class TimerActionRequest(
-    val minutes: Int = 0
+    val minutes: Int = 0,
+    val customerName: String? = null
+)
+
+@Serializable
+data class CustomerNameRequest(
+    val customerName: String
+)
+
+@Serializable
+data class RentalRecord(
+    val id: String,
+    val customerName: String,
+    val roomName: String,
+    val startTime: Long,
+    val endTime: Long? = null,
+    val initialDurationMinutes: Int,
+    val extendedMinutes: Int = 0,
+    val totalDurationMinutes: Int = initialDurationMinutes,
+    val status: String = "ACTIVE" // "ACTIVE", "COMPLETED", "STOPPED", "RESET"
 )
 
 @Serializable
@@ -42,3 +62,50 @@ data class WsMessage(
     val status: StatusDto? = null,
     val message: String? = null
 )
+
+@Serializable
+data class AppDto(
+    val packageName: String,
+    val appName: String,
+    val isLeanback: Boolean,
+    val isAllowed: Boolean
+)
+
+@Serializable
+data class ToggleAppRequest(
+    val packageName: String,
+    val isAllowed: Boolean
+)
+
+@Serializable
+data class SettingsDto(
+    val roomName: String,
+    val hourlyRate: Long,
+    val overlayCorner: String,
+    val overlaySize: String,
+    val standbyBgMode: String = "NONE",
+    val standbyYoutubeUrl: String = "",
+    val standbyYoutubeMute: Boolean = true,
+    val standbyVideoMute: Boolean = true,
+    val hasCustomBgImage: Boolean = false,
+    val hasCustomBgVideo: Boolean = false
+)
+
+@Serializable
+data class UpdateSettingsRequest(
+    val roomName: String? = null,
+    val hourlyRate: Long? = null,
+    val overlayCorner: String? = null,
+    val overlaySize: String? = null,
+    val newPin: String? = null,
+    val standbyBgMode: String? = null,
+    val standbyYoutubeUrl: String? = null,
+    val standbyYoutubeMute: Boolean? = null,
+    val standbyVideoMute: Boolean? = null
+)
+
+@Serializable
+data class UploadImageRequest(
+    val imageBase64: String
+)
+

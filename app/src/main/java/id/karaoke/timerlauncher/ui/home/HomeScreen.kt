@@ -3,6 +3,16 @@ package id.karaoke.timerlauncher.ui.home
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import android.graphics.BitmapFactory
+import android.webkit.WebChromeClient
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.PlayerConstants
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.YouTubePlayerCallback
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.options.IFramePlayerOptions
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,6 +33,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -54,6 +68,111 @@ import id.karaoke.timerlauncher.ui.theme.TextMuted
 import id.karaoke.timerlauncher.ui.theme.TextPrimary
 import kotlinx.coroutines.delay
 
+fun extractYoutubeVideoId(url: String): String? {
+    if (url.isBlank()) return null
+    val clean = url.trim()
+    val pattern = Regex("""(?:youtu\.be/|youtube\.com/(?:watch\?v=|embed/|shorts/|live/|v/))([a-zA-Z0-9_-]{11})""")
+    val match = pattern.find(clean)
+    if (match != null) {
+        return match.groupValues[1]
+    }
+    if (clean.length == 11 && clean.all { it.isLetterOrDigit() || it == '-' || it == '_' }) {
+        return clean
+    }
+    return null
+}
+
+private fun buildYoutubeHtml(videoId: String, isMuted: Boolean): String {
+    val muteVal = if (isMuted) 1 else 0
+    return """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+            <style>
+                * { margin:0; padding:0; box-sizing:border-box; background:#000; overflow:hidden; }
+                html, body { width:100%; height:100%; background:#000; }
+                #player { width:100%; height:100%; position:absolute; top:0; left:0; border:none; }
+                iframe { width:100%; height:100%; position:absolute; top:0; left:0; border:none; }
+            </style>
+        </head>
+        <body>
+            <div id="player"></div>
+            <script src="https://www.youtube.com/iframe_api"></script>
+            <script>
+                var player;
+                var apiReady = false;
+
+                function onYouTubeIframeAPIReady() {
+                    apiReady = true;
+                    console.log("KaraokeYT: YouTube IFrame API Ready");
+                    player = new YT.Player('player', {
+                        width: '100%',
+                        height: '100%',
+                        videoId: '$videoId',
+                        playerVars: {
+                            'autoplay': 1,
+                            'controls': 0,
+                            'disablekb': 1,
+                            'fs': 0,
+                            'loop': 1,
+                            'playlist': '$videoId',
+                            'modestbranding': 1,
+                            'rel': 0,
+                            'playsinline': 1,
+                            'enablejsapi': 1,
+                            'origin': 'https://www.youtube.com'
+                        },
+                        events: {
+                            'onReady': onPlayerReady,
+                            'onStateChange': onPlayerStateChange,
+                            'onError': onPlayerError
+                        }
+                    });
+                }
+
+                function onPlayerReady(event) {
+                    console.log("KaraokeYT: Player ready, starting playback");
+                    if ($isMuted) {
+                        event.target.mute();
+                    } else {
+                        event.target.unMute();
+                    }
+                    event.target.playVideo();
+                }
+
+                function onPlayerStateChange(event) {
+                    console.log("KaraokeYT: Player state changed to " + event.data);
+                    if (event.data === 0) { // ENDED -> loop
+                        if (player && typeof player.playVideo === 'function') {
+                            player.playVideo();
+                        }
+                    }
+                }
+
+                function onPlayerError(event) {
+                    console.error("KaraokeYT: Player error " + event.data + ", attempting fallback iframe");
+                    loadFallbackIframe();
+                }
+
+                function loadFallbackIframe() {
+                    var container = document.body;
+                    container.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/$videoId?autoplay=1&mute=$muteVal&controls=0&loop=1&playlist=$videoId&playsinline=1&modestbranding=1&rel=0" allow="autoplay; encrypted-media"></iframe>';
+                }
+
+                // Fallback timeout if API script fails to load in 3.5s
+                setTimeout(function() {
+                    if (!apiReady) {
+                        console.log("KaraokeYT: API load timeout, using direct fallback iframe");
+                        loadFallbackIframe();
+                    }
+                }, 3500);
+            </script>
+        </body>
+        </html>
+    """.trimIndent()
+}
+
 @Composable
 fun HomeScreen(onOpenSettings: () -> Unit) {
     val context = LocalContext.current
@@ -84,10 +203,179 @@ fun HomeScreen(onOpenSettings: () -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .background(BgDark)
-            .padding(horizontal = 48.dp, vertical = 28.dp)
     ) {
+        // Standby Background: Active strictly when timer is IDLE
+        if (timerState.isIdle) {
+            when (settings.standbyBgMode) {
+                "IMAGE" -> {
+                    val bgBitmap = remember(settings.bgImageTimestamp, settings.standbyBgMode) {
+                        val file = app.settingsRepository.getStandbyBgFile()
+                        if (file.exists()) {
+                            runCatching {
+                                BitmapFactory.decodeFile(file.absolutePath)?.asImageBitmap()
+                            }.getOrNull()
+                        } else null
+                    }
+                    if (bgBitmap != null) {
+                        Image(
+                            bitmap = bgBitmap,
+                            contentDescription = "Standby Background",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.verticalGradient(
+                                        listOf(
+                                            Color(0xD90E0F12),
+                                            Color(0xB30E0F12),
+                                            Color(0xE60E0F12)
+                                        )
+                                    )
+                                )
+                        )
+                    }
+                }
+                "VIDEO" -> {
+                    val videoFile = remember(settings.bgVideoTimestamp, settings.standbyBgMode) {
+                        val file = app.settingsRepository.getStandbyVideoFile()
+                        if (file.exists()) file else null
+                    }
+                    if (videoFile != null) {
+                        AndroidView(
+                            factory = { ctx ->
+                                android.widget.VideoView(ctx).apply {
+                                    setVideoPath(videoFile.absolutePath)
+                                    setOnPreparedListener { mp ->
+                                        mp.isLooping = true
+                                        if (settings.standbyVideoMute) {
+                                            mp.setVolume(0f, 0f)
+                                        } else {
+                                            mp.setVolume(1f, 1f)
+                                        }
+                                        start()
+                                    }
+                                    setOnErrorListener { _, what, extra ->
+                                        android.util.Log.e("KaraokeVideo", "Video playback error: $what, $extra")
+                                        true
+                                    }
+                                }
+                            },
+                            update = { videoView ->
+                                val currentTag = "${videoFile.lastModified()}:${settings.standbyVideoMute}"
+                                if (videoView.tag != currentTag) {
+                                    videoView.tag = currentTag
+                                    videoView.setVideoPath(videoFile.absolutePath)
+                                    videoView.setOnPreparedListener { mp ->
+                                        mp.isLooping = true
+                                        if (settings.standbyVideoMute) {
+                                            mp.setVolume(0f, 0f)
+                                        } else {
+                                            mp.setVolume(1f, 1f)
+                                        }
+                                        videoView.start()
+                                    }
+                                }
+                            },
+                            onRelease = { videoView ->
+                                videoView.stopPlayback()
+                            },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.verticalGradient(
+                                        listOf(
+                                            Color(0xD90E0F12),
+                                            Color(0x800E0F12),
+                                            Color(0xE60E0F12)
+                                        )
+                                    )
+                                )
+                        )
+                    }
+                }
+                "YOUTUBE" -> {
+                    val videoId = remember(settings.standbyYoutubeUrl) {
+                        extractYoutubeVideoId(settings.standbyYoutubeUrl)
+                    }
+                    if (!videoId.isNullOrBlank()) {
+                        AndroidView(
+                            factory = { ctx ->
+                                YouTubePlayerView(ctx).apply {
+                                    enableAutomaticInitialization = false
+                                    val options = IFramePlayerOptions.Builder()
+                                        .controls(0)
+                                        .rel(0)
+                                        .ivLoadPolicy(3)
+                                        .build()
+
+                                    initialize(object : AbstractYouTubePlayerListener() {
+                                        override fun onReady(youTubePlayer: YouTubePlayer) {
+                                            android.util.Log.d("KaraokeYT", "YouTubePlayer onReady: $videoId")
+                                            if (settings.standbyYoutubeMute) {
+                                                youTubePlayer.mute()
+                                            } else {
+                                                youTubePlayer.unMute()
+                                            }
+                                            youTubePlayer.loadVideo(videoId, 0f)
+                                        }
+
+                                        override fun onStateChange(youTubePlayer: YouTubePlayer, state: PlayerConstants.PlayerState) {
+                                            android.util.Log.d("KaraokeYT", "YouTubePlayer state: $state")
+                                            if (state == PlayerConstants.PlayerState.ENDED) {
+                                                youTubePlayer.seekTo(0f)
+                                                youTubePlayer.play()
+                                            }
+                                        }
+
+                                        override fun onError(youTubePlayer: YouTubePlayer, error: PlayerConstants.PlayerError) {
+                                            android.util.Log.e("KaraokeYT", "YouTubePlayer error: $error")
+                                        }
+                                    }, options)
+                                }
+                            },
+                            update = { playerView ->
+                                val key = "$videoId:${settings.standbyYoutubeMute}"
+                                if (playerView.tag != key) {
+                                    playerView.tag = key
+                                    playerView.getYouTubePlayerWhenReady(object : YouTubePlayerCallback {
+                                        override fun onYouTubePlayer(youTubePlayer: YouTubePlayer) {
+                                            android.util.Log.d("KaraokeYT", "Updating video in ready player: $videoId")
+                                            if (settings.standbyYoutubeMute) {
+                                                youTubePlayer.mute()
+                                            } else {
+                                                youTubePlayer.unMute()
+                                            }
+                                            youTubePlayer.loadVideo(videoId, 0f)
+                                        }
+                                    })
+                                }
+                            },
+                            onRelease = { playerView ->
+                                android.util.Log.d("KaraokeYT", "Releasing YouTubePlayerView")
+                                playerView.release()
+                            },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color(0x880E0F12))
+                        )
+                    }
+                }
+            }
+        }
+
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 48.dp, vertical = 28.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             // 1. Top Bar: Room name, ADB warning, and Settings button
@@ -186,23 +474,45 @@ fun HomeScreen(onOpenSettings: () -> Unit) {
                 }
             }
 
-            // 3. Bottom Row: Karaoke App Shortcut & Corner Admin QR (if Idle)
+            // 3. Bottom Row: Allowed Apps Shortcuts & Corner Admin QR (if Idle)
+            val installedApps = remember(settings.allowedPackages) {
+                app.appDiscoveryManager.getInstalledApps(settings.allowedPackages)
+            }
+            val allowedApps = remember(installedApps) {
+                installedApps.filter { it.isAllowed }
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom
             ) {
-                // Karaoke App Shortcut Card
+                // Allowed Apps Shortcut Cards
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.weight(1f, fill = false)
                 ) {
-                    AppShortcutCard(
-                        title = "Buka YouTube",
-                        subtitle = "Aplikasi Karaoke",
-                        packageName = "com.google.android.youtube.tv",
-                        fallbackPackage = "com.google.android.youtube",
-                        context = context
-                    )
+                    if (allowedApps.isNotEmpty()) {
+                        for (item in allowedApps.take(4)) {
+                            AppShortcutCard(
+                                title = item.appName,
+                                subtitle = if (item.isLeanback) "Aplikasi TV" else "Aplikasi Karaoke",
+                                iconBitmap = item.iconBitmap,
+                                onClick = {
+                                    launchApp(context, item.packageName, "")
+                                }
+                            )
+                        }
+                    } else {
+                        AppShortcutCard(
+                            title = "Buka YouTube",
+                            subtitle = "Aplikasi Karaoke",
+                            iconBitmap = null,
+                            onClick = {
+                                launchApp(context, "com.google.android.youtube.tv", "org.smarttube.stable")
+                            }
+                        )
+                    }
                 }
 
                 // Corner QR Code (visible only when timer is IDLE)
@@ -255,9 +565,8 @@ fun HomeScreen(onOpenSettings: () -> Unit) {
 fun AppShortcutCard(
     title: String,
     subtitle: String,
-    packageName: String,
-    fallbackPackage: String,
-    context: Context
+    iconBitmap: androidx.compose.ui.graphics.ImageBitmap? = null,
+    onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
@@ -273,25 +582,50 @@ fun AppShortcutCard(
                 shape = RoundedCornerShape(18.dp)
             )
             .focusable(interactionSource = interactionSource)
-            .clickable {
-                launchApp(context, packageName, fallbackPackage)
-            }
+            .clickable(onClick = onClick)
             .padding(16.dp),
         contentAlignment = Alignment.CenterStart
     ) {
-        Column {
-            Text(
-                text = title,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (isFocused) Color.White else TextPrimary
-            )
-            Text(
-                text = subtitle,
-                fontSize = 13.sp,
-                color = if (isFocused) Color(0xFFE0E7FF) else TextMuted,
-                modifier = Modifier.padding(top = 2.dp)
-            )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            if (iconBitmap != null) {
+                Image(
+                    bitmap = iconBitmap,
+                    contentDescription = title,
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0x22FFFFFF)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("📺", fontSize = 24.sp)
+                }
+            }
+
+            Column {
+                Text(
+                    text = title,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isFocused) Color.White else TextPrimary,
+                    maxLines = 1
+                )
+                Text(
+                    text = subtitle,
+                    fontSize = 12.sp,
+                    color = if (isFocused) Color(0xFFE0E7FF) else TextMuted,
+                    modifier = Modifier.padding(top = 2.dp),
+                    maxLines = 1
+                )
+            }
         }
     }
 }
@@ -328,10 +662,12 @@ fun HomeDpadButton(
 
 private fun launchApp(context: Context, primaryPkg: String, fallbackPkg: String) {
     val pm = context.packageManager
-    val intent = pm.getLeanbackLaunchIntentForPackage(primaryPkg)
-        ?: pm.getLaunchIntentForPackage(primaryPkg)
-        ?: pm.getLeanbackLaunchIntentForPackage(fallbackPkg)
-        ?: pm.getLaunchIntentForPackage(fallbackPkg)
+    val candidates = listOf(primaryPkg, "org.smarttube.stable", fallbackPkg)
+    var intent: Intent? = null
+    for (pkg in candidates) {
+        intent = pm.getLeanbackLaunchIntentForPackage(pkg) ?: pm.getLaunchIntentForPackage(pkg)
+        if (intent != null) break
+    }
 
     if (intent != null) {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

@@ -2,25 +2,44 @@
 set -euo pipefail
 
 TV_IP="${1:-}"
+MODE="${2:-release}"
 PACKAGE="id.karaoke.timerlauncher"
 MAIN_ACTIVITY="${PACKAGE}/.ui.MainActivity"
-APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
 
 if [[ -z "${TV_IP}" ]]; then
-  echo "Usage: $0 <tv-ip-address>"
+  echo "Usage: $0 <tv-ip-address> [release|debug]"
   echo "Example: $0 192.168.1.105"
+  echo "Example: $0 192.168.1.105 release"
+  echo "Example: $0 192.168.1.105 debug"
   exit 1
 fi
 
+LOWER_MODE=$(echo "${MODE}" | tr '[:upper:]' '[:lower:]')
+
+case "${LOWER_MODE}" in
+  debug|--debug|-d)
+    BUILD_TYPE="debug"
+    GRADLE_TASK="assembleDebug"
+    APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
+    ;;
+  *)
+    BUILD_TYPE="release"
+    GRADLE_TASK="assembleRelease"
+    APK_PATH="app/build/outputs/apk/release/app-release.apk"
+    ;;
+esac
+
+echo "==> Target TV IP   : ${TV_IP}:5555"
+echo "==> Build Variant  : ${BUILD_TYPE}"
 echo "==> Connecting to TV at ${TV_IP}:5555..."
 adb connect "${TV_IP}:5555"
 
 if [[ ! -f "${APK_PATH}" ]]; then
-  echo "==> Building debug APK..."
-  ./gradlew assembleDebug
+  echo "==> Building ${BUILD_TYPE} APK via ${GRADLE_TASK}..."
+  ./gradlew "${GRADLE_TASK}"
 fi
 
-echo "==> Installing APK to TV..."
+echo "==> Installing ${BUILD_TYPE} APK (${APK_PATH}) to TV..."
 adb -s "${TV_IP}:5555" install -r "${APK_PATH}"
 
 echo "==> Granting SYSTEM_ALERT_WINDOW (overlay permission)..."
