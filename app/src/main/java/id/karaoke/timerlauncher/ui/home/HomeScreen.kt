@@ -47,10 +47,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import id.karaoke.timerlauncher.App
@@ -184,6 +187,7 @@ fun HomeScreen(onOpenSettings: () -> Unit) {
     var isAdbOn by remember { mutableStateOf(DeviceHealth.isAdbEnabled(context)) }
     var ipAddress by remember { mutableStateOf(DeviceHealth.getIpAddress(context)) }
     var showPinDialog by remember { mutableStateOf(false) }
+    var showLockedNotice by remember { mutableStateOf(false) }
 
     // Recheck ADB & IP every 5s
     LaunchedEffect(Unit) {
@@ -481,6 +485,8 @@ fun HomeScreen(onOpenSettings: () -> Unit) {
             val allowedApps = remember(installedApps) {
                 installedApps.filter { it.isAllowed }
             }
+            val isSessionActive = timerState.isRunning || timerState.isPaused
+            val isLocked = !isSessionActive
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -496,20 +502,30 @@ fun HomeScreen(onOpenSettings: () -> Unit) {
                         for (item in allowedApps.take(4)) {
                             AppShortcutCard(
                                 title = item.appName,
-                                subtitle = if (item.isLeanback) "Aplikasi TV" else "Aplikasi Karaoke",
+                                subtitle = if (isLocked) "Terkunci • Hubungi Kasir" else (if (item.isLeanback) "Aplikasi TV" else "Aplikasi Karaoke"),
                                 iconBitmap = item.iconBitmap,
+                                isLocked = isLocked,
                                 onClick = {
-                                    launchApp(context, item.packageName, "")
+                                    if (isLocked) {
+                                        showLockedNotice = true
+                                    } else {
+                                        launchApp(context, item.packageName, "")
+                                    }
                                 }
                             )
                         }
                     } else {
                         AppShortcutCard(
                             title = "Buka YouTube",
-                            subtitle = "Aplikasi Karaoke",
+                            subtitle = if (isLocked) "Terkunci • Hubungi Kasir" else "Aplikasi Karaoke",
                             iconBitmap = null,
+                            isLocked = isLocked,
                             onClick = {
-                                launchApp(context, "com.google.android.youtube.tv", "org.smarttube.stable")
+                                if (isLocked) {
+                                    showLockedNotice = true
+                                } else {
+                                    launchApp(context, "com.google.android.youtube.tv", "org.smarttube.stable")
+                                }
                             }
                         )
                     }
@@ -558,6 +574,14 @@ fun HomeScreen(onOpenSettings: () -> Unit) {
                 }
             )
         }
+
+        // App Locked Notice modal
+        if (showLockedNotice) {
+            AppLockedDialog(
+                roomName = settings.roomName,
+                onDismiss = { showLockedNotice = false }
+            )
+        }
     }
 }
 
@@ -566,19 +590,34 @@ fun AppShortcutCard(
     title: String,
     subtitle: String,
     iconBitmap: androidx.compose.ui.graphics.ImageBitmap? = null,
+    isLocked: Boolean = false,
     onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
 
+    val cardBg = when {
+        isFocused && isLocked -> Color(0x33EF4444)
+        isFocused -> PrimaryIndigo
+        isLocked -> Color(0x1A1E2028)
+        else -> SurfaceDark
+    }
+
+    val cardBorderColor = when {
+        isFocused && isLocked -> DangerRed
+        isFocused -> Color.White
+        isLocked -> Color(0x22FFFFFF)
+        else -> Color(0x33FFFFFF)
+    }
+
     Box(
         modifier = Modifier
             .size(240.dp, 100.dp)
             .clip(RoundedCornerShape(18.dp))
-            .background(if (isFocused) PrimaryIndigo else SurfaceDark)
+            .background(cardBg)
             .border(
                 width = if (isFocused) 3.dp else 1.dp,
-                color = if (isFocused) Color.White else Color(0x33FFFFFF),
+                color = cardBorderColor,
                 shape = RoundedCornerShape(18.dp)
             )
             .focusable(interactionSource = interactionSource)
@@ -590,23 +629,40 @@ fun AppShortcutCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            if (iconBitmap != null) {
-                Image(
-                    bitmap = iconBitmap,
-                    contentDescription = title,
-                    modifier = Modifier
-                        .size(46.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(46.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0x22FFFFFF)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("📺", fontSize = 24.sp)
+            Box(contentAlignment = Alignment.BottomEnd) {
+                if (iconBitmap != null) {
+                    Image(
+                        bitmap = iconBitmap,
+                        contentDescription = title,
+                        modifier = Modifier
+                            .size(46.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(46.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0x22FFFFFF)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("📺", fontSize = 24.sp)
+                    }
+                }
+
+                if (isLocked) {
+                    Box(
+                        modifier = Modifier
+                            .size(18.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(DangerRed),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "🔒",
+                            fontSize = 10.sp
+                        )
+                    }
                 }
             }
 
@@ -615,15 +671,107 @@ fun AppShortcutCard(
                     text = title,
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (isFocused) Color.White else TextPrimary,
+                    color = if (isFocused) Color.White else if (isLocked) Color(0xFFD1D5DB) else TextPrimary,
                     maxLines = 1
                 )
                 Text(
                     text = subtitle,
                     fontSize = 12.sp,
-                    color = if (isFocused) Color(0xFFE0E7FF) else TextMuted,
+                    color = if (isLocked) {
+                        if (isFocused) Color(0xFFFCA5A5) else DangerRed
+                    } else {
+                        if (isFocused) Color(0xFFE0E7FF) else TextMuted
+                    },
                     modifier = Modifier.padding(top = 2.dp),
                     maxLines = 1
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun AppLockedDialog(
+    roomName: String,
+    onDismiss: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+        delay(6000L)
+        onDismiss()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xD9000000)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier
+                .width(480.dp)
+                .clip(RoundedCornerShape(24.dp))
+                .background(SurfaceDark)
+                .border(2.dp, DangerRed, RoundedCornerShape(24.dp))
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color(0x33EF4444)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("🔒", fontSize = 32.sp)
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            Text(
+                text = "Akses Karaoke Belum Dibuka",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = "Sesi karaoke di $roomName belum dimulai atau waktu sewa telah habis.\n\nSilakan hubungi kasir atau operator untuk mengaktifkan sesi karaoke.",
+                fontSize = 15.sp,
+                color = TextMuted,
+                textAlign = TextAlign.Center,
+                lineHeight = 22.sp
+            )
+
+            Spacer(modifier = Modifier.height(26.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(if (isFocused) Color.White else Color(0x22FFFFFF))
+                    .border(
+                        width = if (isFocused) 2.dp else 1.dp,
+                        color = if (isFocused) AccentAmber else Color(0x33FFFFFF),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .focusRequester(focusRequester)
+                    .focusable(interactionSource = interactionSource)
+                    .clickable(onClick = onDismiss),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Mengerti (Tutup)",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isFocused) Color.Black else Color.White
                 )
             }
         }
