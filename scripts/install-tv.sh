@@ -34,10 +34,8 @@ echo "==> Build Variant  : ${BUILD_TYPE}"
 echo "==> Connecting to TV at ${TV_IP}:5555..."
 adb connect "${TV_IP}:5555"
 
-if [[ ! -f "${APK_PATH}" ]]; then
-  echo "==> Building ${BUILD_TYPE} APK via ${GRADLE_TASK}..."
-  ./gradlew "${GRADLE_TASK}"
-fi
+echo "==> Building latest ${BUILD_TYPE} APK via ${GRADLE_TASK}..."
+./gradlew "${GRADLE_TASK}"
 
 echo "==> Installing ${BUILD_TYPE} APK (${APK_PATH}) to TV..."
 adb -s "${TV_IP}:5555" install -r "${APK_PATH}"
@@ -51,11 +49,13 @@ adb -s "${TV_IP}:5555" shell dumpsys deviceidle whitelist +"${PACKAGE}"
 echo "==> Setting default launcher / home activity..."
 adb -s "${TV_IP}:5555" shell cmd package set-home-activity "${MAIN_ACTIVITY}"
 
-echo "==> Ensuring Google TV default launcher (launcherx) remains enabled..."
-# CRITICAL: On Sony Bravia Google TV, disabling launcherx causes a system service crash & watchdog reboot loop.
-# Setting home activity above is already sufficient to make our app default.
+echo "==> Ensuring OEM / Google TV default launchers remain enabled to prevent bootloop..."
 adb -s "${TV_IP}:5555" shell cmd package enable com.google.android.apps.tv.launcherx || true
 adb -s "${TV_IP}:5555" shell pm enable com.google.android.apps.tv.launcherx || true
+adb -s "${TV_IP}:5555" shell cmd package enable com.google.android.tvlauncher || true
+adb -s "${TV_IP}:5555" shell pm enable com.google.android.tvlauncher || true
+adb -s "${TV_IP}:5555" shell cmd package enable com.haier.launcher.haiermatrix || true
+adb -s "${TV_IP}:5555" shell pm enable com.haier.launcher.haiermatrix || true
 
 echo "==> Starting application..."
 adb -s "${TV_IP}:5555" shell am start -n "${MAIN_ACTIVITY}"
