@@ -84,6 +84,21 @@
   const settingVideoMute = document.getElementById("settingVideoMute");
   const settingYoutubeUrl = document.getElementById("settingYoutubeUrl");
   const settingYoutubeMute = document.getElementById("settingYoutubeMute");
+  const settingOperatorPhone = document.getElementById("settingOperatorPhone");
+  const operatorWaCard = document.getElementById("operatorWaCard");
+  const linkOperatorWa = document.getElementById("linkOperatorWa");
+
+  function formatWaLink(phone, room) {
+    if (!phone) return "#";
+    let clean = phone.replace(/[^0-9]/g, "");
+    if (clean.startsWith("08")) {
+      clean = "62" + clean.substring(1);
+    } else if (clean.startsWith("8")) {
+      clean = "62" + clean;
+    }
+    const text = encodeURIComponent(`Halo Operator, saya di ${room || "Ruang Karaoke"} butuh bantuan/sewa.`);
+    return `https://wa.me/${clean}?text=${text}`;
+  }
 
   // Tab Switching
   tabTimer.addEventListener("click", () => switchTab("timer"));
@@ -727,6 +742,14 @@
       if (settingYoutubeUrl) settingYoutubeUrl.value = data.standbyYoutubeUrl || "";
       if (settingYoutubeMute) settingYoutubeMute.checked = (data.standbyYoutubeMute !== false);
       if (settingVideoMute) settingVideoMute.checked = (data.standbyVideoMute !== false);
+      if (settingOperatorPhone) settingOperatorPhone.value = data.operatorPhone || "";
+
+      if (data.operatorPhone && operatorWaCard && linkOperatorWa) {
+        linkOperatorWa.href = formatWaLink(data.operatorPhone, data.roomName);
+        operatorWaCard.classList.remove("hidden");
+      } else if (operatorWaCard) {
+        operatorWaCard.classList.add("hidden");
+      }
 
       if (data.hasCustomBgImage) {
         if (bgImgElement) {
@@ -813,7 +836,8 @@
         standbyBgMode: currentStandbyBgMode,
         standbyYoutubeUrl: settingYoutubeUrl?.value.trim() || "",
         standbyYoutubeMute: settingYoutubeMute ? settingYoutubeMute.checked : true,
-        standbyVideoMute: settingVideoMute ? settingVideoMute.checked : true
+        standbyVideoMute: settingVideoMute ? settingVideoMute.checked : true,
+        operatorPhone: settingOperatorPhone ? settingOperatorPhone.value.trim() : ""
       };
       if (newPin) payload.newPin = newPin;
 
@@ -834,6 +858,12 @@
       if (roomNameHeader) roomNameHeader.textContent = data.roomName;
       if (settingNewPin) settingNewPin.value = "";
       if (settingConfirmPin) settingConfirmPin.value = "";
+      if (data.operatorPhone && operatorWaCard && linkOperatorWa) {
+        linkOperatorWa.href = formatWaLink(data.operatorPhone, data.roomName);
+        operatorWaCard.classList.remove("hidden");
+      } else if (operatorWaCard) {
+        operatorWaCard.classList.add("hidden");
+      }
       showSettingsAlert("Pengaturan berhasil disimpan dan disinkronkan ke TV", false);
       if (rateDisplayTag) rateDisplayTag.textContent = `Tarif: ${formatRupiah(currentHourlyRate)} / Jam`;
       if (previewRateFormatted) previewRateFormatted.textContent = `${formatRupiah(currentHourlyRate)} / Jam`;

@@ -368,7 +368,8 @@ class LocalServer(
                     standbyBgMode = req.standbyBgMode,
                     standbyYoutubeUrl = req.standbyYoutubeUrl,
                     standbyYoutubeMute = req.standbyYoutubeMute,
-                    standbyVideoMute = req.standbyVideoMute
+                    standbyVideoMute = req.standbyVideoMute,
+                    operatorPhone = req.operatorPhone
                 )
                 settingsRepository.recordAction(
                     "SETTINGS_UPDATE",
@@ -535,7 +536,8 @@ class LocalServer(
             standbyYoutubeMute = settings.standbyYoutubeMute,
             standbyVideoMute = settings.standbyVideoMute,
             hasCustomBgImage = settingsRepository.getStandbyBgFile().exists(),
-            hasCustomBgVideo = settingsRepository.getStandbyVideoFile().exists()
+            hasCustomBgVideo = settingsRepository.getStandbyVideoFile().exists(),
+            operatorPhone = settings.operatorPhone
         )
     }
 

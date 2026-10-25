@@ -47,9 +47,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -70,6 +76,28 @@ import id.karaoke.timerlauncher.ui.theme.SurfaceDark
 import id.karaoke.timerlauncher.ui.theme.TextMuted
 import id.karaoke.timerlauncher.ui.theme.TextPrimary
 import kotlinx.coroutines.delay
+
+fun cleanWhatsAppPhone(phone: String): String {
+    val digits = phone.filter { it.isDigit() }
+    return when {
+        digits.startsWith("08") -> "62" + digits.substring(1)
+        digits.startsWith("8") -> "62" + digits
+        else -> digits
+    }
+}
+
+fun formatPhoneDisplay(phone: String): String {
+    val clean = cleanWhatsAppPhone(phone)
+    return if (clean.startsWith("62") && clean.length >= 10) {
+        val rest = clean.substring(2)
+        val p1 = rest.take(3)
+        val p2 = rest.drop(3).take(4)
+        val p3 = rest.drop(7)
+        "+62 $p1-$p2-$p3"
+    } else {
+        phone
+    }
+}
 
 fun extractYoutubeVideoId(url: String): String? {
     if (url.isBlank()) return null
@@ -188,6 +216,7 @@ fun HomeScreen(onOpenSettings: () -> Unit) {
     var ipAddress by remember { mutableStateOf(DeviceHealth.getIpAddress(context)) }
     var showPinDialog by remember { mutableStateOf(false) }
     var showLockedNotice by remember { mutableStateOf(false) }
+    var showWhatsAppDialog by remember { mutableStateOf(false) }
 
     // Recheck ADB & IP every 5s
     LaunchedEffect(Unit) {
@@ -388,41 +417,58 @@ fun HomeScreen(onOpenSettings: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text(
-                        text = settings.roomName,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.White
-                    )
-                    Text(
-                        text = "Karaoke TV Launcher",
-                        fontSize = 13.sp,
-                        color = TextMuted
-                    )
-                }
-
-                if (isAdbOn) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0x33EF4444))
-                            .border(1.dp, DangerRed, RoundedCornerShape(8.dp))
-                            .padding(horizontal = 14.dp, vertical = 6.dp)
-                    ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Column {
                         Text(
-                            text = "⚠️ Debugging ADB aktif! Segera matikan di opsi pengembang demi keamanan.",
-                            color = Color(0xFFFCA5A5),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold
+                            text = settings.roomName,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White
                         )
+                        Text(
+                            text = "Karaoke TV Launcher",
+                            fontSize = 13.sp,
+                            color = TextMuted
+                        )
+                    }
+
+                    if (isAdbOn) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0x33EF4444))
+                                .border(1.dp, DangerRed, RoundedCornerShape(8.dp))
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = "⚠️ ADB Aktif",
+                                color = Color(0xFFFCA5A5),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
                     }
                 }
 
-                HomeDpadButton(
-                    text = "⚙ Pengaturan",
-                    onClick = { showPinDialog = true }
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (settings.operatorPhone.isNotBlank()) {
+                        WhatsAppDpadButton(
+                            text = "💬 WhatsApp Operator",
+                            onClick = { showWhatsAppDialog = true }
+                        )
+                    }
+
+                    HomeDpadButton(
+                        text = "⚙ Pengaturan",
+                        onClick = { showPinDialog = true }
+                    )
+                }
             }
 
             // 2. Center Hero: Timer Display & Status
@@ -579,7 +625,21 @@ fun HomeScreen(onOpenSettings: () -> Unit) {
         if (showLockedNotice) {
             AppLockedDialog(
                 roomName = settings.roomName,
+                operatorPhone = settings.operatorPhone,
+                onContactOperator = {
+                    showLockedNotice = false
+                    showWhatsAppDialog = true
+                },
                 onDismiss = { showLockedNotice = false }
+            )
+        }
+
+        // WhatsApp Operator modal
+        if (showWhatsAppDialog && settings.operatorPhone.isNotBlank()) {
+            WhatsAppOperatorDialog(
+                roomName = settings.roomName,
+                operatorPhone = settings.operatorPhone,
+                onDismiss = { showWhatsAppDialog = false }
             )
         }
     }
@@ -622,6 +682,13 @@ fun AppShortcutCard(
             )
             .focusable(interactionSource = interactionSource)
             .clickable(onClick = onClick)
+            .onKeyEvent { keyEvent ->
+                if (keyEvent.type == KeyEventType.KeyUp &&
+                    (keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter)) {
+                    onClick()
+                    true
+                } else false
+            }
             .padding(16.dp),
         contentAlignment = Alignment.CenterStart
     ) {
@@ -693,15 +760,21 @@ fun AppShortcutCard(
 @Composable
 fun AppLockedDialog(
     roomName: String,
+    operatorPhone: String = "",
+    onContactOperator: (() -> Unit)? = null,
     onDismiss: () -> Unit
 ) {
+    BackHandler { onDismiss() }
+
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
+    val chatInteractionSource = remember { MutableInteractionSource() }
+    val isChatFocused by chatInteractionSource.collectIsFocusedAsState()
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
-        delay(6000L)
+        delay(10000L)
         onDismiss()
     }
 
@@ -751,6 +824,210 @@ fun AppLockedDialog(
 
             Spacer(modifier = Modifier.height(26.dp))
 
+            if (operatorPhone.isNotBlank() && onContactOperator != null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1.3f)
+                            .height(48.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (isChatFocused) Color(0xFF25D366) else Color(0x3325D366))
+                            .border(
+                                width = if (isChatFocused) 2.dp else 1.dp,
+                                color = if (isChatFocused) Color.White else Color(0x6625D366),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .focusable(interactionSource = chatInteractionSource)
+                            .clickable {
+                                onContactOperator()
+                            }
+                            .onKeyEvent { keyEvent ->
+                                if (keyEvent.type == KeyEventType.KeyUp &&
+                                    (keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter)) {
+                                    onContactOperator()
+                                    true
+                                } else false
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "💬 Chat Operator",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isChatFocused) Color.Black else Color(0xFF86EFAC)
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (isFocused) Color.White else Color(0x22FFFFFF))
+                            .border(
+                                width = if (isFocused) 2.dp else 1.dp,
+                                color = if (isFocused) AccentAmber else Color(0x33FFFFFF),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .focusRequester(focusRequester)
+                            .focusable(interactionSource = interactionSource)
+                            .clickable(onClick = onDismiss)
+                            .onKeyEvent { keyEvent ->
+                                if (keyEvent.type == KeyEventType.KeyUp &&
+                                    (keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter)) {
+                                    onDismiss()
+                                    true
+                                } else false
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Tutup",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isFocused) Color.Black else Color.White
+                        )
+                    }
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (isFocused) Color.White else Color(0x22FFFFFF))
+                        .border(
+                            width = if (isFocused) 2.dp else 1.dp,
+                            color = if (isFocused) AccentAmber else Color(0x33FFFFFF),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .focusRequester(focusRequester)
+                        .focusable(interactionSource = interactionSource)
+                        .clickable(onClick = onDismiss)
+                        .onKeyEvent { keyEvent ->
+                            if (keyEvent.type == KeyEventType.KeyUp &&
+                                (keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter)) {
+                                onDismiss()
+                                true
+                            } else false
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Mengerti (Tutup)",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isFocused) Color.Black else Color.White
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun WhatsAppOperatorDialog(
+    roomName: String,
+    operatorPhone: String,
+    onDismiss: () -> Unit
+) {
+    BackHandler { onDismiss() }
+
+    val cleanPhone = cleanWhatsAppPhone(operatorPhone)
+    val encodedRoom = runCatching { java.net.URLEncoder.encode(roomName, "UTF-8") }.getOrDefault("Karaoke")
+    val waUrl = "https://wa.me/$cleanPhone?text=Halo%20Operator%2C%20saya%20di%20$encodedRoom%20membutuhkan%20bantuan."
+    val qrBitmap = remember(waUrl) {
+        QrCodeGenerator.generateQrBitmap(waUrl, 260)
+    }
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xD9000000)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier
+                .width(480.dp)
+                .clip(RoundedCornerShape(24.dp))
+                .background(SurfaceDark)
+                .border(2.dp, Color(0xFF25D366), RoundedCornerShape(24.dp))
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0x3325D366)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("💬", fontSize = 28.sp)
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Text(
+                text = "Chat WhatsApp Operator",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Scan QR code berikut dengan kamera ponsel untuk langsung terhubung ke WhatsApp Operator $roomName.",
+                fontSize = 14.sp,
+                color = TextMuted,
+                textAlign = TextAlign.Center,
+                lineHeight = 20.sp
+            )
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            Box(
+                modifier = Modifier
+                    .size(190.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color.White)
+                    .padding(8.dp)
+            ) {
+                Image(
+                    bitmap = qrBitmap,
+                    contentDescription = "WhatsApp QR Code",
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Text(
+                text = formatPhoneDisplay(operatorPhone),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = FontFamily.Monospace,
+                color = Color(0xFF86EFAC)
+            )
+
+            Text(
+                text = "Bantuan sewa, tambah jam sewa, atau pemesanan",
+                fontSize = 12.sp,
+                color = TextMuted,
+                modifier = Modifier.padding(top = 2.dp, bottom = 20.dp)
+            )
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -764,17 +1041,62 @@ fun AppLockedDialog(
                     )
                     .focusRequester(focusRequester)
                     .focusable(interactionSource = interactionSource)
-                    .clickable(onClick = onDismiss),
+                    .clickable(onClick = onDismiss)
+                    .onKeyEvent { keyEvent ->
+                        if (keyEvent.type == KeyEventType.KeyUp &&
+                            (keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter)) {
+                            onDismiss()
+                            true
+                        } else false
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Mengerti (Tutup)",
+                    text = "Tutup",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = if (isFocused) Color.Black else Color.White
                 )
             }
         }
+    }
+}
+
+@Composable
+fun WhatsAppDpadButton(
+    text: String,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (isFocused) Color(0xFF25D366) else Color(0x2625D366))
+            .border(
+                width = if (isFocused) 2.dp else 1.dp,
+                color = if (isFocused) Color.White else Color(0x6625D366),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .focusable(interactionSource = interactionSource)
+            .clickable(onClick = onClick)
+            .onKeyEvent { keyEvent ->
+                if (keyEvent.type == KeyEventType.KeyUp &&
+                    (keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter)) {
+                    onClick()
+                    true
+                } else false
+            }
+            .padding(horizontal = 18.dp, vertical = 10.dp)
+    ) {
+        Text(
+            text = text,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = if (isFocused) Color.Black else Color(0xFF86EFAC),
+            maxLines = 1
+        )
     }
 }
 
@@ -797,13 +1119,21 @@ fun HomeDpadButton(
             )
             .focusable(interactionSource = interactionSource)
             .clickable(onClick = onClick)
+            .onKeyEvent { keyEvent ->
+                if (keyEvent.type == KeyEventType.KeyUp &&
+                    (keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter)) {
+                    onClick()
+                    true
+                } else false
+            }
             .padding(horizontal = 18.dp, vertical = 10.dp)
     ) {
         Text(
             text = text,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
-            color = if (isFocused) Color.Black else TextPrimary
+            color = if (isFocused) Color.Black else TextPrimary,
+            maxLines = 1
         )
     }
 }

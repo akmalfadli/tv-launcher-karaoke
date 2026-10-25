@@ -55,7 +55,8 @@ data class AppSettings(
     val standbyYoutubeMute: Boolean = true,
     val bgImageTimestamp: Long = 0L,
     val standbyVideoMute: Boolean = true,
-    val bgVideoTimestamp: Long = 0L
+    val bgVideoTimestamp: Long = 0L,
+    val operatorPhone: String = ""
 )
 
 class SettingsRepository(private val context: Context) {
@@ -75,6 +76,7 @@ class SettingsRepository(private val context: Context) {
     private val keyBgImageTimestamp = longPreferencesKey("bg_image_timestamp")
     private val keyStandbyVideoMute = booleanPreferencesKey("standby_video_mute")
     private val keyBgVideoTimestamp = longPreferencesKey("bg_video_timestamp")
+    private val keyOperatorPhone = stringPreferencesKey("operator_phone")
     private val keyActionLogs = stringPreferencesKey("action_logs")
     private val keyRentalRecords = stringPreferencesKey("rental_records")
     private val keyActiveRentalId = stringPreferencesKey("active_rental_id")
@@ -99,7 +101,8 @@ class SettingsRepository(private val context: Context) {
             standbyYoutubeMute = prefs[keyStandbyYoutubeMute] ?: true,
             bgImageTimestamp = prefs[keyBgImageTimestamp] ?: 0L,
             standbyVideoMute = prefs[keyStandbyVideoMute] ?: true,
-            bgVideoTimestamp = prefs[keyBgVideoTimestamp] ?: 0L
+            bgVideoTimestamp = prefs[keyBgVideoTimestamp] ?: 0L,
+            operatorPhone = prefs[keyOperatorPhone] ?: ""
         )
     }
 
@@ -191,7 +194,8 @@ class SettingsRepository(private val context: Context) {
         standbyBgMode: String? = null,
         standbyYoutubeUrl: String? = null,
         standbyYoutubeMute: Boolean? = null,
-        standbyVideoMute: Boolean? = null
+        standbyVideoMute: Boolean? = null,
+        operatorPhone: String? = null
     ) {
         context.settingsDataStore.edit { prefs ->
             if (roomName != null && roomName.isNotBlank()) {
@@ -217,6 +221,9 @@ class SettingsRepository(private val context: Context) {
             }
             if (standbyVideoMute != null) {
                 prefs[keyStandbyVideoMute] = standbyVideoMute
+            }
+            if (operatorPhone != null) {
+                prefs[keyOperatorPhone] = operatorPhone.trim()
             }
         }
     }

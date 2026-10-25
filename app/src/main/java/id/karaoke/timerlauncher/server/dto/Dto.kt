@@ -88,7 +88,8 @@ data class SettingsDto(
     val standbyYoutubeMute: Boolean = true,
     val standbyVideoMute: Boolean = true,
     val hasCustomBgImage: Boolean = false,
-    val hasCustomBgVideo: Boolean = false
+    val hasCustomBgVideo: Boolean = false,
+    val operatorPhone: String = ""
 )
 
 @Serializable
@@ -101,7 +102,8 @@ data class UpdateSettingsRequest(
     val standbyBgMode: String? = null,
     val standbyYoutubeUrl: String? = null,
     val standbyYoutubeMute: Boolean? = null,
-    val standbyVideoMute: Boolean? = null
+    val standbyVideoMute: Boolean? = null,
+    val operatorPhone: String? = null
 )
 
 @Serializable

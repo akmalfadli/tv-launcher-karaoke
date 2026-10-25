@@ -580,6 +580,29 @@ body {
   background: #B45309;
 }
 
+.btn-whatsapp {
+  background: #25D366;
+  background: linear-gradient(180deg, #25D366 0%, #1EBE5D 100%);
+  color: #0B141A;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-whatsapp:active {
+  background: #199E4B;
+  transform: scale(0.99);
+}
+
+.whatsapp-zone {
+  border-color: rgba(37, 211, 102, 0.25) !important;
+}
+
 /* Preset Buttons (Tactile Segmented Style) */
 .btn-preset {
   background: var(--bg-control);
