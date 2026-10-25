@@ -1306,3 +1306,197 @@ body {
   display: none !important;
 }
 
+/* ==========================================================================
+   PWA Install Banner
+   ========================================================================== */
+.pwa-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(245, 158, 11, 0.08));
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: var(--radius-card);
+  animation: modalFadeIn 0.25s ease-out;
+}
+
+.pwa-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pwa-icon-box {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 10px;
+  background: rgba(99, 102, 241, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #818CF8;
+}
+
+.pwa-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-high);
+}
+
+.pwa-sub {
+  font-size: 0.70rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pwa-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-sm {
+  padding: 7px 14px;
+  font-size: 0.78rem;
+  min-height: 34px;
+  border-radius: 8px;
+}
+
+.btn-icon-subtle {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.btn-icon-subtle:hover {
+  color: var(--text-high);
+}
+
+/* ==========================================================================
+   Responsive Tablet Mode (Portrait & Landscape)
+   ========================================================================== */
+
+/* 1. Tablet Portrait (min-width: 600px) */
+@media (min-width: 600px) {
+  body {
+    padding: 24px 20px 48px;
+  }
+
+  .app-container {
+    max-width: 720px;
+    gap: 16px;
+  }
+
+  .header {
+    padding: 16px 20px;
+  }
+
+  .room-info h1 {
+    font-size: 1.35rem;
+  }
+
+  /* Timer monitor */
+  .timer-card {
+    padding: 24px 24px 20px;
+  }
+
+  .timer-display {
+    font-size: clamp(3.6rem, 10vw, 4.6rem);
+  }
+
+  /* Recap Stats: 4 in a single horizontal row on tablets */
+  .recap-stats-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 12px;
+  }
+
+  /* Apps List: 2-column grid of cards on tablet */
+  #appsListContainer.rental-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .app-toggle-card {
+    margin-bottom: 0;
+  }
+}
+
+/* 2. Tablet Landscape (min-width: 920px or landscape with min-width: 768px) */
+@media (min-width: 920px), (min-width: 768px) and (orientation: landscape) {
+  body {
+    padding: 28px 32px 56px;
+  }
+
+  .app-container {
+    max-width: 1040px;
+    gap: 18px;
+  }
+
+  /* Dashboard Split Layout: Monitor on Left, Control Actions on Right */
+  #dashboardSection.dashboard {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    grid-template-areas:
+      "monitor presets"
+      "customer actions"
+      "extend adjust";
+    gap: 16px;
+    align-items: start;
+  }
+
+  #dashboardSection .timer-card {
+    grid-area: monitor;
+    margin-bottom: 0;
+  }
+
+  #dashboardSection #customerInputSection {
+    grid-area: customer;
+    margin-bottom: 0;
+  }
+
+  #dashboardSection #presetSection {
+    grid-area: presets;
+    margin-bottom: 0;
+  }
+
+  #dashboardSection #actionControlsSection {
+    grid-area: actions;
+    margin-bottom: 0;
+  }
+
+  #dashboardSection #adjustSection {
+    grid-area: adjust;
+    margin-bottom: 0;
+  }
+
+  #dashboardSection #extendControls {
+    grid-area: extend;
+    margin-bottom: 0;
+  }
+
+  /* Apps Grid: 3 columns on landscape tablets */
+  #appsListContainer.rental-list {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+
+  /* Login Card Tablet */
+  .login-card {
+    max-width: 440px;
+    margin: 0 auto;
+  }
+}
+
+

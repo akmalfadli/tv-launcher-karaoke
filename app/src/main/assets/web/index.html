@@ -4,9 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#0E0F12">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="application-name" content="Karaoke Remote">
+  <meta name="apple-mobile-web-app-title" content="Karaoke Remote">
   <title>Console Remote • Karaoke Admin</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <link rel="apple-touch-icon" href="/icon-192.png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -32,6 +38,26 @@
 
     <!-- Warnings / Alert Banner -->
     <div id="warningsBanner" class="warnings-banner hidden"></div>
+
+    <!-- PWA Install Banner (Triggered by Chrome beforeinstallprompt) -->
+    <div id="pwaInstallBanner" class="card pwa-banner hidden">
+      <div class="pwa-banner-left">
+        <div class="pwa-icon-box">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+          </svg>
+        </div>
+        <div>
+          <div class="pwa-title">Pasang Aplikasi Remote (PWA)</div>
+          <div class="pwa-sub">Install ke layar HP / Tablet untuk akses instan tanpa address bar</div>
+        </div>
+      </div>
+      <div class="pwa-banner-actions">
+        <button id="btnPwaInstall" type="button" class="btn btn-primary btn-sm">Install</button>
+        <button id="btnPwaDismiss" type="button" class="btn-icon-subtle" title="Tutup">&times;</button>
+      </div>
+    </div>
 
     <!-- Segmented Navigation Bar -->
     <nav class="nav-tabs hidden" id="navTabs">
@@ -143,7 +169,7 @@
       </div>
 
       <!-- Quick Session Preset Buttons -->
-      <div class="card control-zone">
+      <div class="card control-zone" id="presetSection">
         <div class="zone-label-row">
           <span class="micro-label">MULAI SESI BARU</span>
           <span class="micro-label-muted">DURASI</span>
@@ -169,7 +195,7 @@
       </div>
 
       <!-- Hardware Action Rocker Controls -->
-      <div class="card control-zone">
+      <div class="card control-zone" id="actionControlsSection">
         <div class="zone-label-row">
           <span class="micro-label">AKSI KONTROL SISTEM</span>
         </div>
@@ -190,7 +216,7 @@
       </div>
 
       <!-- Fine-tune Increments -->
-      <div class="card control-zone">
+      <div class="card control-zone" id="adjustSection">
         <div class="zone-label-row">
           <span class="micro-label">PENYESUAIAN WAKTU</span>
           <span class="micro-label-muted">STEP IN TIME</span>

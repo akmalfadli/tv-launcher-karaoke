@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E2028"/>
+      <stop offset="100%" stop-color="#0E0F12"/>
+    </linearGradient>
+    <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818CF8"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+    <linearGradient id="amberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background Card -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+  <rect width="504" height="504" x="4" y="4" rx="108" fill="none" stroke="#6366F1" stroke-width="4" stroke-opacity="0.3"/>
+
+  <!-- Glowing Accent Ring -->
+  <circle cx="256" cy="256" r="160" fill="#16181E" stroke="url(#amberGrad)" stroke-width="6" stroke-opacity="0.8" filter="url(#glow)"/>
+
+  <!-- Microphone Head -->
+  <rect x="220" y="170" width="72" height="116" rx="36" fill="url(#amberGrad)"/>
+
+  <!-- Microphone Grid Lines -->
+  <line x1="220" y1="210" x2="292" y2="210" stroke="#78350F" stroke-width="3" stroke-opacity="0.4"/>
+  <line x1="220" y1="235" x2="292" y2="235" stroke="#78350F" stroke-width="3" stroke-opacity="0.4"/>
+
+  <!-- Microphone U-Arc Cradle -->
+  <path d="M 200 240 A 56 56 0 0 0 312 240" fill="none" stroke="url(#primaryGrad)" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- Microphone Stem & Stand -->
+  <line x1="256" y1="296" x2="256" y2="345" stroke="url(#primaryGrad)" stroke-width="12" stroke-linecap="round"/>
+  <line x1="206" y1="345" x2="306" y2="345" stroke="url(#primaryGrad)" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- Signal / Music Sparkle Indicator -->
+  <circle cx="360" cy="170" r="18" fill="#10B981" filter="url(#glow)"/>
+</svg>

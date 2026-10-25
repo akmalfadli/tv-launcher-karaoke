@@ -1255,4 +1255,52 @@
   } else {
     showLogin();
   }
+
+  // ==========================================
+  // PWA Registration & Chrome Install Prompt
+  // ==========================================
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/sw.js").then((reg) => {
+        console.log("PWA Service Worker registered:", reg.scope);
+      }).catch((err) => {
+        console.log("PWA Service Worker registration failed:", err);
+      });
+    });
+  }
+
+  let deferredPrompt = null;
+  const pwaInstallBanner = document.getElementById("pwaInstallBanner");
+  const btnPwaInstall = document.getElementById("btnPwaInstall");
+  const btnPwaDismiss = document.getElementById("btnPwaDismiss");
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    // Prevent mini-infobar on mobile Chrome
+    e.preventDefault();
+    deferredPrompt = e;
+    if (pwaInstallBanner && !sessionStorage.getItem("pwa_dismissed")) {
+      pwaInstallBanner.classList.remove("hidden");
+    }
+  });
+
+  btnPwaInstall?.addEventListener("click", async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      console.log("PWA install choice:", choice.outcome);
+      deferredPrompt = null;
+      pwaInstallBanner?.classList.add("hidden");
+    }
+  });
+
+  btnPwaDismiss?.addEventListener("click", () => {
+    pwaInstallBanner?.classList.add("hidden");
+    sessionStorage.setItem("pwa_dismissed", "true");
+  });
+
+  window.addEventListener("appinstalled", () => {
+    pwaInstallBanner?.classList.add("hidden");
+    deferredPrompt = null;
+    console.log("Karaoke Remote PWA successfully installed");
+  });
 })();

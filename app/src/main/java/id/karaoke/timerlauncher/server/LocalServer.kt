@@ -127,6 +127,21 @@ class LocalServer(
             get("/app.js") {
                 serveAsset(call, "web/app.js", ContentType.Application.JavaScript)
             }
+            get("/manifest.json") {
+                serveAsset(call, "web/manifest.json", ContentType.parse("application/manifest+json"))
+            }
+            get("/sw.js") {
+                serveAsset(call, "web/sw.js", ContentType.Application.JavaScript)
+            }
+            get("/icon-192.png") {
+                serveAsset(call, "web/icon-192.png", ContentType.Image.PNG)
+            }
+            get("/icon-512.png") {
+                serveAsset(call, "web/icon-512.png", ContentType.Image.PNG)
+            }
+            get("/icon.svg") {
+                serveAsset(call, "web/icon.svg", ContentType.Image.SVG)
+            }
             get("/player") {
                 val v = call.request.queryParameters["v"] ?: ""
                 val mute = call.request.queryParameters["mute"] ?: "1"
