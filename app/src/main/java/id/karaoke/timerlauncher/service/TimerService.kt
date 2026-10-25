@@ -85,6 +85,23 @@ class TimerService : Service() {
                 overlayController.updateConfig(settings.overlayCorner, settings.overlaySize)
             }
         }
+
+        // Listen for screen on (e.g. TV waking up from standby)
+        try {
+            val screenFilter = android.content.IntentFilter(Intent.ACTION_SCREEN_ON)
+            registerReceiver(screenReceiver, screenFilter)
+        } catch (_: Exception) {}
+    }
+
+    private val screenReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == Intent.ACTION_SCREEN_ON) {
+                val app = application as? App ?: return
+                if (app.timerEngine.state.value.isIdle || app.timerEngine.state.value.isFinished) {
+                    TvNavigationController.bringLauncherToFront(context)
+                }
+            }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -98,6 +115,9 @@ class TimerService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
+        try {
+            unregisterReceiver(screenReceiver)
+        } catch (_: Exception) {}
         serviceScope.cancel()
         val app = application as App
         app.localServer.stop()

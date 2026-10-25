@@ -1,13 +1,13 @@
 package id.karaoke.timerlauncher.ui
 
 import android.os.Bundle
+import android.view.KeyEvent
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import id.karaoke.timerlauncher.App
 import id.karaoke.timerlauncher.service.TimerService
 import id.karaoke.timerlauncher.ui.home.HomeScreen
@@ -32,6 +32,13 @@ class MainActivity : ComponentActivity() {
 
                 val currentScreen by currentScreenState
 
+                // Prevent BACK button from exiting or minimizing the launcher
+                BackHandler(enabled = true) {
+                    if (currentScreenState.value != Screen.Main) {
+                        currentScreenState.value = Screen.Main
+                    }
+                }
+
                 when {
                     !settings.isSetupDone -> {
                         SetupScreen(
@@ -53,6 +60,18 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if (currentScreenState.value != Screen.Main) {
+                currentScreenState.value = Screen.Main
+                return true
+            }
+            // Consume the back key so the launcher is never exited or dismissed
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
     }
 
     override fun onNewIntent(intent: android.content.Intent) {
