@@ -48,6 +48,7 @@
   const finishNotice = document.getElementById("finishNotice");
   const btnPauseResume = document.getElementById("btnPauseResume");
   const btnStop = document.getElementById("btnStop");
+  const btnPowerOff = document.getElementById("btnPowerOff");
   const extendControls = document.getElementById("extendControls");
   const appsListContainer = document.getElementById("appsListContainer");
   const btnRefreshApps = document.getElementById("btnRefreshApps");
@@ -618,6 +619,34 @@
       isDanger: true,
       onConfirm: () => {
         callTimerApi("stop");
+      }
+    });
+  });
+
+  btnPowerOff?.addEventListener("click", () => {
+    showConfirmModal({
+      title: "Matikan TV (Power Off)?",
+      message: "Layar TV akan dimatikan dan TV masuk ke mode Standby. Sesi karaoke yang sedang berjalan akan dihentikan terlebih dahulu.",
+      confirmText: "Matikan TV",
+      isDanger: true,
+      onConfirm: async () => {
+        try {
+          const res = await fetch("/api/device/power-off", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            }
+          });
+          const data = await res.json();
+          if (res.ok) {
+            showToast(data.message || "Perintah matikan TV berhasil dikirim", "success");
+          } else {
+            showToast(data.error || "Gagal mematikan TV", "error");
+          }
+        } catch (e) {
+          showToast("Gagal menghubungi server TV", "error");
+        }
       }
     });
   });

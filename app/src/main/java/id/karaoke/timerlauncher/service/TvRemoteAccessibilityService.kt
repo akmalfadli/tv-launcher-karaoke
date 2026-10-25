@@ -78,6 +78,7 @@ object TvNavigationController {
             "MEDIA_PAUSE", "PAUSE" -> "127"
             "MEDIA_STOP", "STOP" -> "86"
             "MEDIA_PLAY_PAUSE", "PLAY_PAUSE" -> "85"
+            "POWER", "SLEEP" -> "26"
             "0" -> "7"
             "1" -> "8"
             "2" -> "9"
@@ -129,8 +130,8 @@ object TvNavigationController {
     fun stopPlaybackAndReturnHome(context: Context) {
         // 1. Send MEDIA PAUSE and MEDIA STOP keycodes to pause any running video/music player
         try {
-            sendNavKey("MEDIA_PAUSE")
-            sendNavKey("MEDIA_STOP")
+            sendNavKey("MEDIA_PAUSE", context)
+            sendNavKey("MEDIA_STOP", context)
         } catch (e: Exception) {
             android.util.Log.e("TvNavController", "Error sending media pause keys", e)
         }
@@ -169,5 +170,39 @@ object TvNavigationController {
         } catch (e: Exception) {
             android.util.Log.e("TvNavController", "Error killing background YouTube", e)
         }
+    }
+
+    /**
+     * Puts the TV into standby / screen off mode.
+     */
+    fun turnOffTv(context: Context): Boolean {
+        // 1. First ensure media is stopped and launcher returned to home
+        stopPlaybackAndReturnHome(context)
+
+        // 2. Perform AccessibilityService.GLOBAL_ACTION_LOCK_SCREEN (API 28+)
+        var success = false
+        val service = accessibilityService
+        if (service != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            try {
+                success = service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_LOCK_SCREEN)
+            } catch (e: Exception) {
+                android.util.Log.e("TvNavController", "Error performing lock screen", e)
+            }
+        }
+
+        // 3. Fallback: shell input keyevent 26 (KEYCODE_POWER) or 223 (KEYCODE_SLEEP)
+        if (!success) {
+            try {
+                Runtime.getRuntime().exec(arrayOf("input", "keyevent", "26"))
+                success = true
+            } catch (e: Exception) {
+                try {
+                    Runtime.getRuntime().exec(arrayOf("input", "keyevent", "223"))
+                    success = true
+                } catch (_: Exception) {}
+            }
+        }
+
+        return success
     }
 }

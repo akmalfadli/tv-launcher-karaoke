@@ -311,6 +311,17 @@ class LocalServer(
                 call.respond(createStatusDto())
             }
 
+            post("/api/device/power-off") {
+                if (!authenticate(call)) return@post
+                if (timerEngine.state.value.isRunning || timerEngine.state.value.isPaused) {
+                    timerEngine.stop()
+                    settingsRepository.finishRental("STOPPED")
+                }
+                settingsRepository.recordAction("DEVICE_POWER_OFF", "Matikan TV (Power Off)", call.request.origin.remoteHost)
+                val ok = id.karaoke.timerlauncher.service.TvNavigationController.turnOffTv(context)
+                call.respond(mapOf("status" to if (ok) "ok" else "error", "message" to "Perintah matikan TV berhasil dijalankan"))
+            }
+
             // Customer Remote Endpoints (Accessible by room guests)
             get("/api/customer/status") {
                 call.respond(createCustomerStatusDto())
