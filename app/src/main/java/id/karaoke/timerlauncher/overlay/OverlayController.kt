@@ -27,6 +27,12 @@ class OverlayController(private val context: Context) {
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private val scope = CoroutineScope(Dispatchers.Main)
 
+    private enum class OverlayMode {
+        CORNER,
+        CENTER_FINAL_MINUTE,
+        FULL_SCREEN_FINISHED
+    }
+
     private var overlayRootView: FrameLayout? = null
     private var pillLayout: LinearLayout? = null
     private var tvPillTimer: TextView? = null
@@ -39,6 +45,8 @@ class OverlayController(private val context: Context) {
     private var currentTimerState: TimerState = TimerState()
     private var currentCorner: OverlayCorner = OverlayCorner.TOP_RIGHT
     private var currentSize: OverlaySize = OverlaySize.MEDIUM
+    private var currentAppliedMode: OverlayMode? = null
+    private var currentAppliedCorner: OverlayCorner? = null
 
     @SuppressLint("RtlHardcoded")
     fun updateState(state: TimerState) {
@@ -85,34 +93,81 @@ class OverlayController(private val context: Context) {
 
         val root = overlayRootView ?: return
 
-        if (currentTimerState.status == TimerStatus.FINISHED) {
-            // Full screen TIMES UP alert
+        val targetMode = when {
+            currentTimerState.status == TimerStatus.FINISHED -> OverlayMode.FULL_SCREEN_FINISHED
+            (currentTimerState.status == TimerStatus.RUNNING || currentTimerState.status == TimerStatus.PAUSED) &&
+                    currentTimerState.remainingMs in 1..60_000L -> OverlayMode.CENTER_FINAL_MINUTE
+            else -> OverlayMode.CORNER
+        }
+
+        if (targetMode == OverlayMode.FULL_SCREEN_FINISHED) {
             pillLayout?.visibility = View.GONE
             timesUpContainer?.visibility = View.VISIBLE
-            updateLayoutParams(isFullScreen = true)
+            updateLayoutParams(targetMode)
         } else {
-            // Pill corner overlay
             timesUpContainer?.visibility = View.GONE
             pillLayout?.visibility = View.VISIBLE
-            updateLayoutParams(isFullScreen = false)
+            updateLayoutParams(targetMode)
 
             tvPillTimer?.text = currentTimerState.formattedRemaining
-            if (currentTimerState.status == TimerStatus.PAUSED) {
-                tvPillStatus?.text = "DIJEDA"
-                tvPillStatus?.visibility = View.VISIBLE
-                pillLayout?.alpha = 0.8f
-            } else {
-                tvPillStatus?.visibility = View.GONE
-                pillLayout?.alpha = 1.0f
-            }
 
-            // Text sizing
-            val spSize = when (currentSize) {
-                OverlaySize.SMALL -> 26f
-                OverlaySize.MEDIUM -> 34f
-                OverlaySize.LARGE -> 44f
+            when (targetMode) {
+                OverlayMode.CENTER_FINAL_MINUTE -> {
+                    // Big center pill for final 60 seconds
+                    pillLayout?.setPadding(dpToPx(40), dpToPx(16), dpToPx(40), dpToPx(16))
+                    pillLayout?.background = GradientDrawable().apply {
+                        setColor(Color.parseColor("#EE12141F")) // Deep dark glass
+                        cornerRadius = dpToPx(24).toFloat()
+                        setStroke(dpToPx(3), Color.parseColor("#EF4444")) // Vibrant Crimson Red
+                    }
+
+                    tvPillTimer?.setTextSize(TypedValue.COMPLEX_UNIT_SP, 68f)
+                    tvPillTimer?.setTextColor(Color.parseColor("#EF4444"))
+                    tvPillTimer?.setShadowLayer(16f, 0f, 4f, Color.BLACK)
+
+                    tvPillStatus?.text = if (currentTimerState.status == TimerStatus.PAUSED) {
+                        "DIJEDA • WAKTU TERSISA"
+                    } else {
+                        "⚠️ WAKTU KARAOKE TERSISA"
+                    }
+                    tvPillStatus?.setTextColor(Color.parseColor("#FCA5A5"))
+                    tvPillStatus?.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+                    tvPillStatus?.setPadding(0, dpToPx(4), 0, 0)
+                    tvPillStatus?.visibility = View.VISIBLE
+                    pillLayout?.alpha = if (currentTimerState.status == TimerStatus.PAUSED) 0.85f else 1.0f
+                }
+                OverlayMode.CORNER -> {
+                    // Standard corner pill
+                    pillLayout?.setPadding(dpToPx(18), dpToPx(8), dpToPx(18), dpToPx(8))
+                    pillLayout?.background = GradientDrawable().apply {
+                        setColor(Color.parseColor("#E612141D"))
+                        cornerRadius = dpToPx(16).toFloat()
+                        setStroke(dpToPx(2), Color.parseColor("#446366F1"))
+                    }
+
+                    val spSize = when (currentSize) {
+                        OverlaySize.SMALL -> 26f
+                        OverlaySize.MEDIUM -> 34f
+                        OverlaySize.LARGE -> 44f
+                    }
+                    tvPillTimer?.setTextSize(TypedValue.COMPLEX_UNIT_SP, spSize)
+                    tvPillTimer?.setTextColor(Color.WHITE)
+                    tvPillTimer?.setShadowLayer(8f, 0f, 2f, Color.BLACK)
+
+                    if (currentTimerState.status == TimerStatus.PAUSED) {
+                        tvPillStatus?.text = "DIJEDA"
+                        tvPillStatus?.setTextColor(Color.parseColor("#FBBF24"))
+                        tvPillStatus?.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+                        tvPillStatus?.setPadding(0, 0, 0, 0)
+                        tvPillStatus?.visibility = View.VISIBLE
+                        pillLayout?.alpha = 0.8f
+                    } else {
+                        tvPillStatus?.visibility = View.GONE
+                        pillLayout?.alpha = 1.0f
+                    }
+                }
+                else -> {}
             }
-            tvPillTimer?.setTextSize(TypedValue.COMPLEX_UNIT_SP, spSize)
         }
     }
 
@@ -193,70 +248,103 @@ class OverlayController(private val context: Context) {
 
         // Initial WindowManager add
         try {
-            val initialParams = createLayoutParams(isFullScreen = false)
+            val initialParams = createLayoutParams(OverlayMode.CORNER)
             windowManager.addView(root, initialParams)
+            currentAppliedMode = OverlayMode.CORNER
+            currentAppliedCorner = currentCorner
         } catch (e: Exception) {
             android.util.Log.e("OverlayController", "Failed to add initial overlay view to WindowManager", e)
             overlayRootView = null
         }
     }
 
-    private fun updateLayoutParams(isFullScreen: Boolean) {
+    private fun updateLayoutParams(mode: OverlayMode) {
         val root = overlayRootView ?: return
 
-        // Update pill layout gravity within root
+        if (currentAppliedMode == mode && currentAppliedCorner == currentCorner) {
+            return
+        }
+
         val pillParams = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.WRAP_CONTENT,
             FrameLayout.LayoutParams.WRAP_CONTENT
         ).apply {
-            gravity = when (currentCorner) {
-                OverlayCorner.TOP_RIGHT -> Gravity.TOP or Gravity.RIGHT
-                OverlayCorner.TOP_LEFT -> Gravity.TOP or Gravity.LEFT
-                OverlayCorner.BOTTOM_RIGHT -> Gravity.BOTTOM or Gravity.RIGHT
-                OverlayCorner.BOTTOM_LEFT -> Gravity.BOTTOM or Gravity.LEFT
+            when (mode) {
+                OverlayMode.CENTER_FINAL_MINUTE -> {
+                    gravity = Gravity.CENTER
+                    setMargins(0, 0, 0, 0)
+                }
+                OverlayMode.CORNER -> {
+                    gravity = when (currentCorner) {
+                        OverlayCorner.TOP_RIGHT -> Gravity.TOP or Gravity.RIGHT
+                        OverlayCorner.TOP_LEFT -> Gravity.TOP or Gravity.LEFT
+                        OverlayCorner.BOTTOM_RIGHT -> Gravity.BOTTOM or Gravity.RIGHT
+                        OverlayCorner.BOTTOM_LEFT -> Gravity.BOTTOM or Gravity.LEFT
+                    }
+                    val margin = dpToPx(32)
+                    setMargins(margin, margin, margin, margin)
+                }
+                OverlayMode.FULL_SCREEN_FINISHED -> {
+                    gravity = Gravity.CENTER
+                    setMargins(0, 0, 0, 0)
+                }
             }
-            val margin = dpToPx(32)
-            setMargins(margin, margin, margin, margin)
         }
         pillLayout?.layoutParams = pillParams
 
-        val wmParams = createLayoutParams(isFullScreen)
+        val wmParams = createLayoutParams(mode)
         try {
             windowManager.updateViewLayout(root, wmParams)
+            currentAppliedMode = mode
+            currentAppliedCorner = currentCorner
         } catch (e: Exception) {
             // view might not be attached
         }
     }
 
-    private fun createLayoutParams(isFullScreen: Boolean): WindowManager.LayoutParams {
+    private fun createLayoutParams(mode: OverlayMode): WindowManager.LayoutParams {
         val type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         val flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                 WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
 
-        return if (isFullScreen) {
-            WindowManager.LayoutParams(
-                WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.MATCH_PARENT,
-                type,
-                flags,
-                PixelFormat.TRANSLUCENT
-            )
-        } else {
-            val gravityVal = when (currentCorner) {
-                OverlayCorner.TOP_RIGHT -> Gravity.TOP or Gravity.RIGHT
-                OverlayCorner.TOP_LEFT -> Gravity.TOP or Gravity.LEFT
-                OverlayCorner.BOTTOM_RIGHT -> Gravity.BOTTOM or Gravity.RIGHT
-                OverlayCorner.BOTTOM_LEFT -> Gravity.BOTTOM or Gravity.LEFT
+        return when (mode) {
+            OverlayMode.FULL_SCREEN_FINISHED -> {
+                WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    type,
+                    flags,
+                    PixelFormat.TRANSLUCENT
+                )
             }
-            WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                type,
-                flags,
-                PixelFormat.TRANSLUCENT
-            ).apply {
-                gravity = gravityVal
+            OverlayMode.CENTER_FINAL_MINUTE -> {
+                WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    type,
+                    flags,
+                    PixelFormat.TRANSLUCENT
+                ).apply {
+                    gravity = Gravity.CENTER
+                }
+            }
+            OverlayMode.CORNER -> {
+                val gravityVal = when (currentCorner) {
+                    OverlayCorner.TOP_RIGHT -> Gravity.TOP or Gravity.RIGHT
+                    OverlayCorner.TOP_LEFT -> Gravity.TOP or Gravity.LEFT
+                    OverlayCorner.BOTTOM_RIGHT -> Gravity.BOTTOM or Gravity.RIGHT
+                    OverlayCorner.BOTTOM_LEFT -> Gravity.BOTTOM or Gravity.LEFT
+                }
+                WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    type,
+                    flags,
+                    PixelFormat.TRANSLUCENT
+                ).apply {
+                    gravity = gravityVal
+                }
             }
         }
     }
@@ -270,7 +358,11 @@ class OverlayController(private val context: Context) {
             }
             overlayRootView = null
             pillLayout = null
+            tvPillTimer = null
+            tvPillStatus = null
             timesUpContainer = null
+            currentAppliedMode = null
+            currentAppliedCorner = null
         }
     }
 
