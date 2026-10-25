@@ -21,6 +21,15 @@
   const btnVolMute = document.getElementById("btnVolMute");
   const btnVolUp = document.getElementById("btnVolUp");
   const btnOpenYouTube = document.getElementById("btnOpenYouTube");
+  const dpadContainer = document.getElementById("dpadContainer");
+  const navShortcuts = document.querySelector(".nav-shortcuts");
+  const btnNavUp = document.getElementById("btnNavUp");
+  const btnNavDown = document.getElementById("btnNavDown");
+  const btnNavLeft = document.getElementById("btnNavLeft");
+  const btnNavRight = document.getElementById("btnNavRight");
+  const btnNavOk = document.getElementById("btnNavOk");
+  const btnNavBack = document.getElementById("btnNavBack");
+  const btnNavHome = document.getElementById("btnNavHome");
   const toastEl = document.getElementById("toast");
   const pulseDot = document.getElementById("pulseDot");
   const connLabel = document.getElementById("connLabel");
@@ -96,7 +105,7 @@
           cleanPhone = "62" + cleanPhone.substring(1);
         }
         const roomEncoded = encodeURIComponent(data.roomName || "Ruang Karaoke");
-        const msg = encodeURIComponent(`Halo Kasir, saya dari ${data.roomName || "Ruangan"}. Mohon bantuan...`);
+        const msg = encodeURIComponent(`Halo Operator, saya dari ${data.roomName || "Ruangan"}. Saya membutuhkan bantuan di ruangan...`);
         btnWaOperator.href = `https://wa.me/${cleanPhone}?text=${msg}`;
         waSection.classList.remove("hidden");
       } else {
@@ -112,7 +121,7 @@
           reqBannerTitle.textContent = `Permintaan Tambah +${data.pendingRequest.requestedMinutes / 60} Jam`;
           reqBannerDesc.textContent = "Menunggu persetujuan kasir/operator...";
         } else {
-          reqBannerTitle.textContent = "Panggilan Bantuan / Pelayan";
+          reqBannerTitle.textContent = "Panggilan Bantuan Operator";
           reqBannerDesc.textContent = "Kru sedang diberitahu...";
         }
       } else {
@@ -120,12 +129,27 @@
       }
     }
 
-    // YouTube button availability (Only allow when timer is actively RUNNING)
+    // YouTube & D-Pad Navigation availability (Only allow when timer is actively RUNNING)
+    const isRunning = (data.status === "RUNNING");
     if (btnOpenYouTube) {
-      if (data.status === "RUNNING") {
+      if (isRunning) {
         btnOpenYouTube.classList.remove("disabled");
       } else {
         btnOpenYouTube.classList.add("disabled");
+      }
+    }
+    if (dpadContainer) {
+      if (isRunning) {
+        dpadContainer.classList.remove("disabled");
+      } else {
+        dpadContainer.classList.add("disabled");
+      }
+    }
+    if (navShortcuts) {
+      if (isRunning) {
+        navShortcuts.classList.remove("disabled");
+      } else {
+        navShortcuts.classList.add("disabled");
       }
     }
 
@@ -207,6 +231,23 @@
     }
   }
 
+  async function sendNav(action) {
+    vibrate();
+    if (!currentState || currentState.status !== "RUNNING") {
+      showToast("Waktu belum berjalan. Mulai sesi karaoke terlebih dahulu!");
+      return;
+    }
+    try {
+      await fetch("/api/customer/nav", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: action })
+      });
+    } catch (e) {
+      console.warn("Nav error:", e);
+    }
+  }
+
   async function openTvYouTube() {
     vibrate();
     if (!currentState || currentState.status !== "RUNNING") {
@@ -243,6 +284,15 @@
   btnVolUp?.addEventListener("click", () => sendVolume("UP"));
   btnVolMute?.addEventListener("click", () => sendVolume("MUTE"));
   btnOpenYouTube?.addEventListener("click", openTvYouTube);
+
+  // D-Pad Navigation Listeners
+  btnNavUp?.addEventListener("click", () => sendNav("UP"));
+  btnNavDown?.addEventListener("click", () => sendNav("DOWN"));
+  btnNavLeft?.addEventListener("click", () => sendNav("LEFT"));
+  btnNavRight?.addEventListener("click", () => sendNav("RIGHT"));
+  btnNavOk?.addEventListener("click", () => sendNav("OK"));
+  btnNavBack?.addEventListener("click", () => sendNav("BACK"));
+  btnNavHome?.addEventListener("click", () => sendNav("HOME"));
 
   // Initial fetch and polling every 2.5 seconds
   fetchStatus();

@@ -367,6 +367,24 @@ class LocalServer(
                 }
             }
 
+            post("/api/customer/nav") {
+                val currentStatus = timerEngine.state.value.status
+                if (currentStatus != id.karaoke.timerlauncher.timer.TimerStatus.RUNNING) {
+                    call.respond(
+                        HttpStatusCode.Forbidden,
+                        ErrorResponse("Waktu belum berjalan. Sesi karaoke belum aktif.")
+                    )
+                    return@post
+                }
+                val req = runCatching { call.receive<CustomerNavRequest>() }.getOrNull()
+                if (req == null) {
+                    call.respond(HttpStatusCode.BadRequest, ErrorResponse("Payload tidak valid"))
+                    return@post
+                }
+                val handled = id.karaoke.timerlauncher.service.TvNavigationController.sendNavKey(req.action)
+                call.respond(mapOf("status" to if (handled) "ok" else "failed"))
+            }
+
             // Admin: Respond to Customer Request
             post("/api/admin/customer-request/respond") {
                 if (!authenticate(call)) return@post

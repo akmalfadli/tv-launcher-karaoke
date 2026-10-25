@@ -56,6 +56,18 @@
                 android:value="Karaoke room timer overlay and local control server" />
         </service>
 
+        <service
+            android:name=".service.TvRemoteAccessibilityService"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+
         <receiver
             android:name=".service.BootReceiver"
             android:enabled="true"

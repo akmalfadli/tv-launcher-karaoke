@@ -46,6 +46,10 @@ adb -s "${TV_IP}:5555" shell appops set "${PACKAGE}" SYSTEM_ALERT_WINDOW allow
 echo "==> Whitelisting from battery optimizations (device idle)..."
 adb -s "${TV_IP}:5555" shell dumpsys deviceidle whitelist +"${PACKAGE}"
 
+echo "==> Enabling Accessibility Service for D-Pad Remote Navigation..."
+adb -s "${TV_IP}:5555" shell settings put secure enabled_accessibility_services "${PACKAGE}/${PACKAGE}.service.TvRemoteAccessibilityService" || true
+adb -s "${TV_IP}:5555" shell settings put secure accessibility_enabled 1 || true
+
 echo "==> Setting default launcher / home activity..."
 adb -s "${TV_IP}:5555" shell cmd package set-home-activity "${MAIN_ACTIVITY}"
 

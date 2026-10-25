@@ -68,6 +68,11 @@ data class CustomerVolumeRequest(
 )
 
 @Serializable
+data class CustomerNavRequest(
+    val action: String = "OK" // "UP", "DOWN", "LEFT", "RIGHT", "OK", "BACK", "HOME"
+)
+
+@Serializable
 data class RespondCustomerRequest(
     val requestId: String,
     val action: String = "ACCEPT" // "ACCEPT" or "REJECT"
