@@ -546,6 +546,31 @@
     </div>
   </div>
 
+  <!-- PWA Install Guide Modal (For HTTP / Chrome on local WiFi) -->
+  <div id="pwaHelpModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="pwaHelpTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="pwaHelpTitle" class="modal-title">Pasang ke Layar Utama</h3>
+        <button type="button" id="btnClosePwaHelp" class="modal-close-btn" aria-label="Tutup">&times;</button>
+      </div>
+      <div class="modal-body" style="font-size: 0.85rem; line-height: 1.5; color: var(--text-secondary);">
+        <p style="margin-bottom: 12px;">Karena remote berjalan pada IP lokal WiFi TV (HTTP), Chrome membatasi pemasangan otomatis.</p>
+        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 12px; margin-bottom: 12px;">
+          <strong style="color: var(--text-high); display: block; margin-bottom: 6px;">Cara Pasang di Chrome:</strong>
+          <ol style="margin-left: 18px; color: var(--text-high); font-size: 0.82rem;">
+            <li>Tekan tombol menu <strong>titik tiga (⋮)</strong> di pojok kanan atas Chrome.</li>
+            <li>Pilih <strong>"Tambahkan ke Layar Utama"</strong> (atau <em>Add to Home screen</em>).</li>
+            <li>Pilih <strong>Pasang / Tambahkan</strong>.</li>
+          </ol>
+        </div>
+        <p style="font-size: 0.74rem; color: var(--text-muted); margin: 0;">Ikon remote akan muncul di beranda HP dan dapat dibuka layar penuh tanpa address bar.</p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="btnPwaHelpOk" class="btn btn-primary" style="width: 100%;">Mengerti</button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>
