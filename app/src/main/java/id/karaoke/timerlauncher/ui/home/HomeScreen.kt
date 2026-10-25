@@ -18,9 +18,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -533,52 +535,93 @@ fun HomeScreen(onOpenSettings: () -> Unit) {
             }
             val isSessionActive = timerState.isRunning || timerState.isPaused
             val isLocked = !isSessionActive
+            val appsScrollState = rememberScrollState()
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom
             ) {
-                // Allowed Apps Shortcut Cards
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.weight(1f, fill = false)
+                // Allowed Apps Shortcut Cards (Horizontal Scrollable)
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.CenterStart
                 ) {
-                    if (allowedApps.isNotEmpty()) {
-                        for (item in allowedApps.take(4)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(appsScrollState)
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (allowedApps.isNotEmpty()) {
+                            for (item in allowedApps) {
+                                AppShortcutCard(
+                                    title = item.appName,
+                                    subtitle = if (isLocked) "Terkunci • Hubungi Kasir" else (if (item.isLeanback) "Aplikasi TV" else "Aplikasi Karaoke"),
+                                    iconBitmap = item.iconBitmap,
+                                    isLocked = isLocked,
+                                    onClick = {
+                                        if (isLocked) {
+                                            showLockedNotice = true
+                                        } else {
+                                            launchApp(context, item.packageName, "")
+                                        }
+                                    }
+                                )
+                            }
+                        } else {
                             AppShortcutCard(
-                                title = item.appName,
-                                subtitle = if (isLocked) "Terkunci • Hubungi Kasir" else (if (item.isLeanback) "Aplikasi TV" else "Aplikasi Karaoke"),
-                                iconBitmap = item.iconBitmap,
+                                title = "Buka YouTube",
+                                subtitle = if (isLocked) "Terkunci • Hubungi Kasir" else "Aplikasi Karaoke",
+                                iconBitmap = null,
                                 isLocked = isLocked,
                                 onClick = {
                                     if (isLocked) {
                                         showLockedNotice = true
                                     } else {
-                                        launchApp(context, item.packageName, "")
+                                        launchApp(context, "com.google.android.youtube.tv", "org.smarttube.stable")
                                     }
                                 }
                             )
                         }
-                    } else {
-                        AppShortcutCard(
-                            title = "Buka YouTube",
-                            subtitle = if (isLocked) "Terkunci • Hubungi Kasir" else "Aplikasi Karaoke",
-                            iconBitmap = null,
-                            isLocked = isLocked,
-                            onClick = {
-                                if (isLocked) {
-                                    showLockedNotice = true
-                                } else {
-                                    launchApp(context, "com.google.android.youtube.tv", "org.smarttube.stable")
-                                }
-                            }
+                    }
+
+                    // Left scroll edge gradient hint
+                    if (appsScrollState.canScrollBackward) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.CenterStart)
+                                .height(108.dp)
+                                .width(28.dp)
+                                .background(
+                                    Brush.horizontalGradient(
+                                        colors = listOf(BgDark, Color.Transparent)
+                                    )
+                                )
+                        )
+                    }
+
+                    // Right scroll edge gradient hint
+                    if (appsScrollState.canScrollForward) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .height(108.dp)
+                                .width(36.dp)
+                                .background(
+                                    Brush.horizontalGradient(
+                                        colors = listOf(Color.Transparent, BgDark)
+                                    )
+                                )
                         )
                     }
                 }
 
                 // Corner QR Code (visible only when timer is IDLE)
                 if (timerState.isIdle) {
+                    Spacer(modifier = Modifier.width(16.dp))
                     Row(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
