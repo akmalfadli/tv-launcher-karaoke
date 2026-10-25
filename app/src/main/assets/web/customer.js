@@ -15,7 +15,7 @@
   const reqBannerDesc = document.getElementById("reqBannerDesc");
   const btnExt1H = document.getElementById("btnExt1H");
   const btnExt2H = document.getElementById("btnExt2H");
-  const btnCallWaiter = document.getElementById("btnCallWaiter");
+  const waSection = document.getElementById("waSection");
   const btnWaOperator = document.getElementById("btnWaOperator");
   const btnVolDown = document.getElementById("btnVolDown");
   const btnVolMute = document.getElementById("btnVolMute");
@@ -89,7 +89,7 @@
     }
 
     // WhatsApp Operator link
-    if (btnWaOperator) {
+    if (waSection && btnWaOperator) {
       if (data.operatorPhone && data.operatorPhone.trim().length > 5) {
         let cleanPhone = data.operatorPhone.trim().replace(/[^0-9]/g, "");
         if (cleanPhone.startsWith("0")) {
@@ -98,9 +98,9 @@
         const roomEncoded = encodeURIComponent(data.roomName || "Ruang Karaoke");
         const msg = encodeURIComponent(`Halo Kasir, saya dari ${data.roomName || "Ruangan"}. Mohon bantuan...`);
         btnWaOperator.href = `https://wa.me/${cleanPhone}?text=${msg}`;
-        btnWaOperator.classList.remove("hidden");
+        waSection.classList.remove("hidden");
       } else {
-        btnWaOperator.classList.add("hidden");
+        waSection.classList.add("hidden");
       }
     }
 
@@ -237,10 +237,6 @@
 
   btnExt2H?.addEventListener("click", () => {
     sendCustomerRequest("EXTENSION", 120, "Permintaan tambah waktu 2 jam dari pelanggan");
-  });
-
-  btnCallWaiter?.addEventListener("click", () => {
-    sendCustomerRequest("WAITER", 0, "Panggilan pelayan ke ruangan");
   });
 
   btnVolDown?.addEventListener("click", () => sendVolume("DOWN"));
