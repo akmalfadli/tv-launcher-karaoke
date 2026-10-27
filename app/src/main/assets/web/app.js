@@ -595,7 +595,30 @@
     btn.addEventListener("click", () => {
       const minutes = parseInt(btn.getAttribute("data-minutes"), 10);
       const customerName = customerNameInput.value.trim();
-      callTimerApi("start", { minutes, customerName });
+      const durationText = minutes >= 60 ? `${minutes / 60} Jam` : `${minutes} Menit`;
+
+      const isTimerActive = currentState && 
+        (currentState.status === "RUNNING" || currentState.status === "PAUSED") &&
+        currentState.remainingMs > 0;
+
+      if (isTimerActive) {
+        const remTime = (timerDisplay && timerDisplay.textContent) ? timerDisplay.textContent : "berjalan";
+        const currentGuest = (currentState.customerName && currentState.customerName.trim()) 
+          ? `Tamu: ${currentState.customerName.trim()}` 
+          : "Sesi Tamu";
+
+        showConfirmModal({
+          title: "Mulai Sesi Baru?",
+          message: `Sesi karaoke saat ini masih berjalan (${currentGuest}, sisa waktu: ${remTime}). Memulai sesi baru (${durationText}) akan mereset timer yang sedang aktif. Apakah Anda yakin ingin memulai sesi baru?`,
+          confirmText: "Ya, Mulai Sesi Baru",
+          isDanger: true,
+          onConfirm: () => {
+            callTimerApi("start", { minutes, customerName });
+          }
+        });
+      } else {
+        callTimerApi("start", { minutes, customerName });
+      }
     });
   });
 
